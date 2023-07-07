@@ -1,0 +1,3 @@
+[submodule "aleo/newsletter"]
+	path = aleo/newsletter
+	url = https://github.com/arosboro/newsletter
