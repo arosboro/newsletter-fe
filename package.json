@@ -2,12 +2,15 @@
   "name": "newsletter-fe",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite prev1iew",
+    "configure-program": "tsc ./util/update-program.ts && node ./util/update-program.js",
+    "build-program": "cd ./aleo/newsletter && leo build",
+    "copy-program": "tsc ./util/copy-program.ts && node ./util/copy-program.js",
+    "program": "npm run configure-program && npm run build-program && npm run copy-program"
   },
   "dependencies": {
     "@demox-labs/aleo-wallet-adapter-base": "^0.0.15",
@@ -16,21 +19,36 @@
     "@demox-labs/aleo-wallet-adapter-reactui": "^0.0.27",
     "@uiw/react-md-editor": "^3.23.3",
     "crypto-js": "^4.1.1",
-    "helia": "^1.3.5",
+    "helia": "^1.0.4",
+    "json-rpc-2.0": "^1.6.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.1",
+    "swr": "^2.2.0"
   },
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@types/crypto-js": "^4.1.1",
+    "@types/node": "^20.4.1",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
     "@typescript-eslint/eslint-plugin": "^5.61.0",
     "@typescript-eslint/parser": "^5.61.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
+    "buffer": "^6.0.3",
+    "dotenv": "^16.3.1",
     "eslint": "^8.44.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.1",
+    "fs-extra": "^11.1.1",
+    "prettier": "^3.0.0",
+    "process": "^0.11.10",
     "typescript": "^5.0.2",
-    "vite": "^4.4.0"
+    "vite": "^4.4.0",
+    "vite-plugin-pwa": "^0.16.4"
   }
 }

@@ -6,67 +6,17 @@
 
 /* Flex layout with header/footer and sidebar to left of body */
 
-.App {
+.App > section {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   align-items: stretch;
 }
 
-.App-header {
-  flex-basis: 100%;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-/* A text input as large as both App-sidebar and App-body */
-.App-header-input {
-  width: 40rem;
-  gap: 1rem;
-  padding: 0.5rem;
-  border: 1px solid #fff;
-  border-radius: 0.5rem;
-  background-color: transparent;
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 500;
-  line-height: 1.1;
-  transition: border-color 0.25s;
-}
-.App-header-input:focus {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-.App-header-input:focus-visible {
-  border-color: #646cff;
-}
-.App-header-input::placeholder {
-  color: #888;
-}
-.App-header-input:hover {
-  border-color: #646cff;
-}
-.App-header-input:hover::placeholder {
-  color: #aaa;
-}
-
-.App-sidebar {
-  flex-basis: 15rem;
-  flex-grow: 1;
-  position: relative;
-}
-
-.App-body {
-  flex-basis: 0;
-  flex-grow: 999;
-  min-width: 66%;
-  display: flex;
-  flex-direction: column;
-}
-
-.App-footer {
-  flex-basis: 100%;
+.wallet-adapter-button,
+.wallet-adapter-dropdown {
+  /* Align it all the way to the right */
+  margin-left: auto;
 }
 
 .logo {
