@@ -2,7 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 
-const Navbar = () => {
+interface Props {
+  isDeployed: boolean | undefined;
+}
+
+const Navbar = ({ isDeployed }: Props) => {
   return (
     <nav>
       <ul>
@@ -13,7 +17,7 @@ const Navbar = () => {
           <Link to="/consume">Consume</Link>
         </li>
         <li>
-          <Link to="/deploy">Deploy</Link>
+          <Link to="/deploy">{isDeployed ? 'Obey' : 'Deploy'}</Link>
         </li>
       </ul>
     </nav>

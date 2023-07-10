@@ -52,9 +52,12 @@ label {
   padding-left: 1.25rem;
 }
 
-.program-deploy {
+.program-deploy,
+.program-deployed {
   /* flex items-center justify-center */
   display: flex;
+  max-width: 66%;
+  flex-grow: 999;
   align-items: center;
   justify-content: center;
 }

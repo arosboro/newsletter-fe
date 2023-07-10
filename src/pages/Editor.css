@@ -56,6 +56,48 @@
   flex-direction: column;
 }
 
+.App-body-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.App-body-form-footer-input {
+  margin-left: 1rem;
+  padding: 0 0.5rem;
+  flex-basis: 100%;
+  margin-top: 1rem;
+  height: 2.25rem;
+  width: 4em;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+  border-radius: 0.5rem;
+  border: 1px solid #fff;
+  background-color: transparent;
+  color: #fff;
+  transition: border-color 0.25s;
+}
+
+.App-body-form-footer > input {
+  margin-top: 1rem;
+  height: 3.25rem;
+  width: 100%;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+  border-radius: 0.5rem;
+  border: 1px solid #fff;
+  background-color: transparent;
+  color: #fff;
+  transition: border-color 0.25s;
+}
+
+.App-body-form-footer > input:disabled {
+  opacity: 0.5;
+}
+
 .App-footer {
   flex-basis: 100%;
 }

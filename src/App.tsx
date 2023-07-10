@@ -1,16 +1,19 @@
 import React, { FC, useEffect, useMemo } from 'react';
-import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
-import { WalletModalProvider, WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
+import useSWR from 'swr';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 import { DecryptPermission, WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
+import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
+import { WalletModalProvider, WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Deploy from './components/Deploy';
-import Editor from './components/Editor';
-import Reader from './components/Reader';
-import NotFound from './components/NotFound';
-import './App.css';
+import Deploy from '@/pages/Deploy';
+import Editor from '@/pages/Editor';
+import Reader from '@/pages/Reader';
+import Navbar from '@/components/Navbar';
+import NotFound from '@/components/NotFound';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
+import '@/App.css';
+import { TESTNET3_API_URL, getProgram } from '@/aleo/rpc';
+import { NewsletterProgramId } from './aleo/newsletter-program';
 
 const App: FC = () => {
   const wallets = useMemo(
@@ -22,6 +25,8 @@ const App: FC = () => {
     [],
   );
 
+  const { data, error, isLoading } = useSWR('programData', () => getProgram(NewsletterProgramId, TESTNET3_API_URL));
+
   return (
     <WalletProvider
       wallets={wallets}
@@ -31,7 +36,7 @@ const App: FC = () => {
       <WalletModalProvider>
         <div className="App">
           <Router>
-            <Navbar />
+            <Navbar isDeployed={!isLoading && !!data} />
             <Routes>
               <Route path="/" element={<Editor />} />
               <Route path="/consume" element={<Reader />} />

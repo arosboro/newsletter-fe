@@ -9,9 +9,30 @@ nav > ul {
   padding: 0;
   background-color: #333;
   color: #fff;
-  font-family: 'Roboto', sans-serif;
+  font-family: sans-serif;
   font-size: 1.2rem;
   font-weight: 300;
   letter-spacing: 0.1rem;
   text-transform: uppercase;
+}
+
+/* Style the text to look like signs in the style of They live when he tries on the glasses */
+nav > ul > li {
+  position: relative;
+  padding: 1rem;
+  cursor: pointer;
+  transition: color 0.25s;
+  /* Color background white (like a billboard with Large black text) */
+  background-color: #fff;
+  color: #000;
+  /* font size */
+  font-size: 1.5rem;
+  /* font weight */
+  font-weight: 900;
+  /* letter spacing */
+  letter-spacing: 0.1rem;
+  /* text transform */
+  text-transform: uppercase;
+  /* border radius */
+  border-radius: 0.1rem;
 }

@@ -3,10 +3,10 @@ import useSWR from 'swr';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 import { Deployment, WalletAdapterNetwork, WalletNotConnectedError } from '@demox-labs/aleo-wallet-adapter-base';
-import { NewsletterProgram, NewsletterProgramId } from '../aleo/newsletter-program';
-import { TESTNET3_API_URL, getProgram } from '@/aleo/rpc';
 import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
-import './Deploy.css';
+import { NewsletterProgram, NewsletterProgramId } from '@/aleo/newsletter-program';
+import { TESTNET3_API_URL, getProgram } from '@/aleo/rpc';
+import '@/pages/Deploy.css';
 
 const Deploy: FC = () => {
   const { wallet, publicKey } = useWallet();
@@ -22,7 +22,7 @@ const Deploy: FC = () => {
 
     if (transactionId) {
       intervalId = setInterval(() => {
-        getTransactionStatus(transactionId!);
+        getTransactionStatus(transactionId);
       }, 1000);
     }
 
@@ -56,7 +56,8 @@ const Deploy: FC = () => {
   return (
     <section className="Reader">
       <header className="App-header">
-        <h1>Get Ready to Send It.</h1>
+        {!isLoading && data && <h1>The contract is Law.</h1>}
+        {!isLoading && !data && <h1>Get Ready to Send It.</h1>}
         <WalletMultiButton />
       </header>
       <div className="App-sidebar">
