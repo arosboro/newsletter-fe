@@ -1,6 +1,8 @@
 // Graciously borrowed from https://github.com/demox-labs/art-factory/blob/main/src/lib/util.ts
 // All credit goes to the original author.
 
+import { create, IPFSHTTPClient } from 'ipfs-http-client';
+
 export function safeParseInt(value: string): number {
   const parsedValue = parseInt(value, 10);
   return isNaN(parsedValue) ? 0 : parsedValue;
@@ -86,4 +88,24 @@ export function parseStringToBigIntArray(input: string): bigint[] {
 export function getRandomElement<T>(list: T[]): T {
   const randomIndex = Math.floor(Math.random() * list.length);
   return list[randomIndex];
+}
+
+export function initIPFS(): IPFSHTTPClient | undefined {
+  let ipfs: IPFSHTTPClient | undefined;
+  try {
+    const authorization =
+        'Basic ' +
+        btoa(import.meta.env.VITE_INFURA_IPFS_API_KEY + ':' + import.meta.env.VITE_INFURA_IPFS_API_SECRET).toString(),
+      ipfs = create({
+        url: import.meta.env.VITE_IPFS_API_ENDPOINT,
+        headers: {
+          authorization,
+        },
+      });
+    return ipfs;
+  } catch (error) {
+    console.error('IPFS error', error);
+    ipfs = undefined;
+    return ipfs;
+  }
 }

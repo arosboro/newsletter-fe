@@ -13,7 +13,7 @@ const Deploy: FC = () => {
   const { data, error, isLoading } = useSWR('programData', () => getProgram(NewsletterProgramId, TESTNET3_API_URL));
 
   const [program, _setProgram] = useState(NewsletterProgram);
-  const [fee, setFee] = useState<string>('80');
+  const [fee, setFee] = useState<string>('9.99');
   const [transactionId, setTransactionId] = useState<string | undefined>();
   const [status, setStatus] = useState<string | undefined>();
 

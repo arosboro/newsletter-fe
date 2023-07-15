@@ -28,11 +28,7 @@ const App: FC = () => {
   const { data, error, isLoading } = useSWR('programData', () => getProgram(NewsletterProgramId, TESTNET3_API_URL));
 
   return (
-    <WalletProvider
-      wallets={wallets}
-      decryptPermission={DecryptPermission.UponRequest}
-      network={WalletAdapterNetwork.Testnet}
-    >
+    <WalletProvider wallets={wallets} decryptPermission={DecryptPermission.AutoDecrypt}>
       <WalletModalProvider>
         <div className="App">
           <Router>

@@ -1,9 +1,9 @@
 import React, { ChangeEvent, FC, useEffect, useMemo } from 'react';
+import { CID, IPFSHTTPClient } from 'ipfs-http-client';
 import useSWR from 'swr';
-import { createHelia } from 'helia';
-import { strings } from '@helia/strings';
 import Toggle from 'react-toggle';
 import MDEditor from '@uiw/react-md-editor';
+import EditorToolbar from '@/components/EditorToolbar';
 import CryptoJS from 'crypto-js';
 import 'react-toggle/style.css';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
@@ -13,11 +13,13 @@ import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@dem
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
-import { padArray, splitStringToBigInts } from '@/lib/util';
+import { padArray, splitStringToBigInts, initIPFS } from '@/lib/util';
 
 const Editor: FC = () => {
   const { wallet, publicKey, requestTransaction } = useWallet();
+  const ipfs: IPFSHTTPClient | undefined = initIPFS();
   // Long assignment of a template string to a variable
+  const defaultTitle = 'The Crypto Classifieds';
   const defaultTemplate = `
   # The Crypto Classifieds
   #### (A Classifieds Community Newsletter)
@@ -50,12 +52,15 @@ const Editor: FC = () => {
   ## Meetups
 
 `;
-  const [titleValue, setTitleValue] = React.useState('The Crypto Classifieds');
-  const [templateValue, setTemplateValue] = React.useState(defaultTemplate);
-  const [contentValue, setContentValue] = React.useState(templateValue);
+  const [title, setTitle] = React.useState<string | undefined>(defaultTitle);
+  const [template, setTemplate] = React.useState<string | undefined>(defaultTemplate);
+  const [template_mode, setTemplateMode] = React.useState<boolean>(true);
+  const [content, setContent] = React.useState<string | undefined>(template);
   // Get the inital secret as a random string of chacters from a whole number
   const initSecret = () => {
-    return Math.floor(Math.random() * 1000000000000000).toString(36);
+    // Calcuate a 64-bit random integer and subtract 4 bytes
+    const seed = BigInt(Math.floor(Math.random() * 2 ** 64)) - BigInt(4);
+    return seed.toString();
   };
   const [secret, setSecret] = React.useState(initSecret());
   const [individual_secret, setIndividualSecret] = React.useState(initSecret());
@@ -64,33 +69,23 @@ const Editor: FC = () => {
   const [content_ciphertext, setContentCiphertext] = React.useState('');
   const [shared_secret, setSharedSecret] = React.useState('');
   const [shared_recipient, setSharedRecipient] = React.useState('');
-  const [fee, setFee] = React.useState(5);
+  const [fee, setFee] = React.useState<number | undefined>(11.11);
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
   const [record, setRecord] = React.useState('');
 
   useEffect(() => {
     // Title ciphertext
-    const title_ciphertext = CryptoJS.AES.encrypt(titleValue, secret).toString();
-    // const title_plaintext = CryptoJS.AES.decrypt(title_ciphertext, secret);
-    setTitleCiphertext(title_ciphertext);
+    setTitleCiphertext(CryptoJS.AES.encrypt(title, secret).toString());
     // Template ciphertext
-    const template_ciphertext = CryptoJS.AES.encrypt(templateValue, secret).toString();
-    // const template_plaintext = CryptoJS.AES.decrypt(template_ciphertext, secret);
-    setTemplateCiphertext(template_ciphertext);
+    setTemplateCiphertext(CryptoJS.AES.encrypt(template, secret).toString());
     // Content ciphertext
-    const content_ciphertext = CryptoJS.AES.encrypt(contentValue, secret).toString();
-    // const content_plaintext = CryptoJS.AES.decrypt(content_ciphertext, secret);
-    setContentCiphertext(content_ciphertext);
+    setContentCiphertext(CryptoJS.AES.encrypt(content, secret).toString());
     // Shared secret
-    const shared_secret_ciphertext = CryptoJS.AES.encrypt(individual_secret, secret).toString();
-    // const shared_plaintext = CryptoJS.AES.decrypt(shared_secret_ciphertext, secret);
-    setSharedSecret(shared_secret_ciphertext);
+    setSharedSecret(CryptoJS.AES.encrypt(individual_secret, secret).toString());
     // Shared recipient
-    const shared_recipient_ciphertext = CryptoJS.AES.encrypt(publicKey, secret).toString();
-    // const shared_plaintext = CryptoJS.AES.decrypt(shared_recipient_ciphertext, secret);
-    setSharedRecipient(shared_recipient_ciphertext);
-  }, [titleValue, templateValue, contentValue, secret, publicKey]);
+    setSharedRecipient(CryptoJS.AES.encrypt(publicKey, secret).toString());
+  }, [title, template, content, secret, publicKey]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -159,23 +154,21 @@ const Editor: FC = () => {
     console.log(content_ciphertext);
 
     // Make immutable hash of the string values.
-    const helia = await createHelia();
-    const s = strings(helia);
-    const title_address = await s.add(title_ciphertext);
-    const template_address = await s.add(template_ciphertext);
-    const content_address = await s.add(content_ciphertext);
+    const title_address = await (ipfs as IPFSHTTPClient).add(title_ciphertext);
+    const template_address = await (ipfs as IPFSHTTPClient).add(template_ciphertext);
+    const content_address = await (ipfs as IPFSHTTPClient).add(content_ciphertext);
 
-    console.log('title_address', title_address.toString());
-    console.log('template_address', template_address.toString());
-    console.log('content_address', content_address.toString());
+    console.log('title_address', title_address.path);
+    console.log('template_address', template_address.path);
+    console.log('content_address', content_address.path);
 
-    const title_bigints = padArray(splitStringToBigInts(title_address.toString()), 10);
-    const template_bigints = padArray(splitStringToBigInts(template_address.toString()), 10);
-    const content_bigints = padArray(splitStringToBigInts(content_address.toString()), 10);
-    const group_secret_bigint = encode_bytes(secret);
-    const individual_secret_bigint = encode_bytes(individual_secret);
-    const shared_secret_bigints = padArray(splitStringToBigInts(shared_secret), 10);
-    const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 10);
+    const title_bigints = padArray(splitStringToBigInts(title_address.path), 4);
+    const template_bigints = padArray(splitStringToBigInts(template_address.path), 4);
+    const content_bigints = padArray(splitStringToBigInts(content_address.path), 4);
+    const group_secret_bigint = padArray([secret], 1);
+    const individual_secret_bigint = padArray([individual_secret], 1);
+    const shared_secret_bigints = padArray(splitStringToBigInts(shared_secret), 4);
+    const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 7);
 
     // Desired format is a string of the form:
     // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
@@ -183,7 +176,8 @@ const Editor: FC = () => {
     const format_bigints = (bigints: bigint[]) => {
       let result = '{ ';
       for (let i = 0; i < bigints.length; i++) {
-        result += `b${i}: ${bigints[i]}u128, `;
+        if (i == bigints.length - 1) result += `b${i}: ${bigints[i]}u128 `;
+        else result += `b${i}: ${bigints[i]}u128, `;
       }
       result += '}';
       return result;
@@ -194,10 +188,10 @@ const Editor: FC = () => {
       `${format_bigints(title_bigints)}`,
       `${format_bigints(template_bigints)}`,
       `${format_bigints(content_bigints)}`,
-      `${group_secret_bigint}u64`,
-      `${individual_secret_bigint}u64`,
-      `${format_bigints(shared_secret_bigints)}u64`,
-      `${format_bigints(shared_recipient_bigints)}u128`,
+      `${group_secret_bigint[0]}u128`,
+      `${individual_secret_bigint[0]}u128`,
+      `${format_bigints(shared_secret_bigints)}`,
+      `${format_bigints(shared_recipient_bigints)}`,
     ];
 
     console.log(inputs);
@@ -229,46 +223,72 @@ const Editor: FC = () => {
     <section className="Editor">
       <header className="App-header">
         <p>
-          <input className="App-header-input" value={titleValue} onChange={setTitleValue} placeholder="Title" />
+          <input
+            className="App-header-input"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Title"
+          />
         </p>
         <WalletMultiButton />
       </header>
       <div className="App-sidebar">
-        <aside className="App-nav">
-          <input className="App-nav-input" placeholder="Search" />
-          <ul className="App-nav-list">
-            <li className="App-nav-list-item">
-              <a href="#" className="App-nav-list-item-link">
-                Post 1
-              </a>
-            </li>
-            <li className="App-nav-list-item">
-              <a href="#" className="App-nav-list-item-link">
-                Post 2
-              </a>
-            </li>
-            <li className="App-nav-list-item">
-              <a href="#" className="App-nav-list-item-link">
-                Post 3
-              </a>
-            </li>
-          </ul>
-        </aside>
+        <EditorToolbar programId={NewsletterProgramId} useWallet={useWallet} ipfs={ipfs} />
       </div>
       <div className="App-body">
+        <div className="App-body-controls">
+          <label>
+            IPFS Status:{' '}
+            {(!ipfs && (
+              <span>
+                <span role="img" aria-label="loading">
+                  ⏳
+                </span>{' '}
+                Loading...
+              </span>
+            )) ||
+              (ipfs && (
+                <span>
+                  <span role="img" aria-label="loaded">
+                    ✅
+                  </span>{' '}
+                  Loaded
+                </span>
+              ))}
+          </label>
+          <label>
+            {(template_mode && 'Template mode (on) ') || 'Template mode (off)'}
+            <Toggle
+              defaultChecked={template_mode}
+              onChange={() => {
+                setTemplateMode(!template_mode);
+              }}
+            />
+          </label>
+        </div>
         <form className="App-body-form" onSubmit={handleSubmit}>
-          <MDEditor className="App-body-editor" height={'54vh'} value={templateValue} onChange={setTemplateValue} />
+          <MDEditor
+            className="App-body-editor"
+            height={'54vh'}
+            value={template_mode ? template : content}
+            onChange={template_mode ? setTemplate : setContent}
+          />
           <div className="App-body-form-footer">
             <label>
               Fee (Credits):
-              <input className="App-body-form-footer-input" value={fee} onChange={setFee} placeholder="Fee" />
+              <input
+                className="App-body-form-footer-input"
+                value={fee}
+                onChange={(event) => setFee(event.target.value)}
+                placeholder="Fee"
+              />
             </label>
             {transactionId && (
               <div>
                 <div>{`Transaction status: ${status}`}</div>
               </div>
             )}
-            <input type="submit" disabled={!publicKey} value="Submit" />
+            <input type="submit" disabled={!publicKey || !ipfs} value="Submit" />
           </div>
         </form>
       </div>
