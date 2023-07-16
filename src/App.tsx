@@ -1,9 +1,9 @@
-import React, { FC, useEffect, useMemo } from 'react';
+import React, { FC, useMemo } from 'react';
 import useSWR from 'swr';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
-import { DecryptPermission, WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
+import { DecryptPermission } from '@demox-labs/aleo-wallet-adapter-base';
 import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
-import { WalletModalProvider, WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
+import { WalletModalProvider } from '@demox-labs/aleo-wallet-adapter-reactui';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Deploy from '@/pages/Deploy';
 import Editor from '@/pages/Editor';

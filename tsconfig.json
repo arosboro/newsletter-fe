@@ -2,15 +2,16 @@
   "compilerOptions": {
     "baseUrl": ".",
     "target": "ES2020",
-    "module": "ESNext",
-    "useDefineForClassFields": true,
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
     /* Bundler mode */
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
     "noEmit": true,
     "jsx": "preserve",
     "incremental": true,

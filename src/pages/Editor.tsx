@@ -1,6 +1,4 @@
-import React, { ChangeEvent, FC, useEffect, useMemo } from 'react';
-import { CID, IPFSHTTPClient } from 'ipfs-http-client';
-import useSWR from 'swr';
+import React, { ChangeEvent, FC, useEffect } from 'react';
 import Toggle from 'react-toggle';
 import MDEditor from '@uiw/react-md-editor';
 import EditorToolbar from '@/components/EditorToolbar';
@@ -13,11 +11,10 @@ import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@dem
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
-import { padArray, splitStringToBigInts, initIPFS } from '@/lib/util';
+import { padArray, splitStringToBigInts, ipfsAdd, NewsletterRecord } from '@/lib/util';
 
 const Editor: FC = () => {
   const { wallet, publicKey, requestTransaction } = useWallet();
-  const ipfs: IPFSHTTPClient | undefined = initIPFS();
   // Long assignment of a template string to a variable
   const defaultTitle = 'The Crypto Classifieds';
   const defaultTemplate = `
@@ -52,40 +49,57 @@ const Editor: FC = () => {
   ## Meetups
 
 `;
-  const [title, setTitle] = React.useState<string | undefined>(defaultTitle);
-  const [template, setTemplate] = React.useState<string | undefined>(defaultTemplate);
+  const [title, setTitle] = React.useState<string>(defaultTitle);
+  const [template, setTemplate] = React.useState<string>(defaultTemplate);
   const [template_mode, setTemplateMode] = React.useState<boolean>(true);
-  const [content, setContent] = React.useState<string | undefined>(template);
+  const [content, setContent] = React.useState<string>(template);
   // Get the inital secret as a random string of chacters from a whole number
-  const initSecret = () => {
+  const initSecret = (): bigint => {
     // Calcuate a 64-bit random integer and subtract 4 bytes
     const seed = BigInt(Math.floor(Math.random() * 2 ** 64)) - BigInt(4);
-    return seed.toString();
+    return seed;
   };
-  const [secret, setSecret] = React.useState(initSecret());
-  const [individual_secret, setIndividualSecret] = React.useState(initSecret());
+  const [secret] = React.useState(initSecret().toString())[0];
+  const [individual_secret] = React.useState(initSecret().toString())[0];
   const [title_ciphertext, setTitleCiphertext] = React.useState('');
   const [template_ciphertext, setTemplateCiphertext] = React.useState('');
   const [content_ciphertext, setContentCiphertext] = React.useState('');
   const [shared_secret, setSharedSecret] = React.useState('');
   const [shared_recipient, setSharedRecipient] = React.useState('');
-  const [fee, setFee] = React.useState<number | undefined>(11.11);
+  const [fee, setFee] = React.useState<number>(11.11);
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
-  const [record, setRecord] = React.useState('');
+  const [privacy_mode, setPrivacyMode] = React.useState<boolean>(false);
+  const [record, setRecord] = React.useState<NewsletterRecord | undefined>();
 
   useEffect(() => {
-    // Title ciphertext
-    setTitleCiphertext(CryptoJS.AES.encrypt(title, secret).toString());
-    // Template ciphertext
-    setTemplateCiphertext(CryptoJS.AES.encrypt(template, secret).toString());
-    // Content ciphertext
-    setContentCiphertext(CryptoJS.AES.encrypt(content, secret).toString());
-    // Shared secret
-    setSharedSecret(CryptoJS.AES.encrypt(individual_secret, secret).toString());
-    // Shared recipient
-    setSharedRecipient(CryptoJS.AES.encrypt(publicKey, secret).toString());
+    if (typeof publicKey === 'string') {
+      // Title ciphertext
+      setTitleCiphertext(CryptoJS.AES.encrypt(title, secret).toString());
+      // Template ciphertext
+      setTemplateCiphertext(CryptoJS.AES.encrypt(template, secret).toString());
+      // Content ciphertext
+      setContentCiphertext(CryptoJS.AES.encrypt(content, secret).toString());
+      // Shared secret
+      setSharedSecret(CryptoJS.AES.encrypt(individual_secret, secret).toString());
+      // Shared recipient
+      setSharedRecipient(CryptoJS.AES.encrypt(publicKey, secret).toString());
+    }
   }, [title, template, content, secret, publicKey]);
+
+  useEffect(() => {
+    if (typeof record !== 'undefined') {
+      if (
+        typeof record.data.title === 'string' &&
+        typeof record.data.template === 'string' &&
+        typeof record.data.content === 'string'
+      ) {
+        setTitle(record.data.title);
+        setTemplate(record.data.template);
+        setContent(record.data.content);
+      }
+    }
+  }, [record]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -103,46 +117,6 @@ const Editor: FC = () => {
     };
   }, [transactionId]);
 
-  const encode_bytes = (value: string) => {
-    // declare variables
-    const bytes: number[] = [];
-    let base64 = '';
-    let bigint = BigInt(0);
-    // String to base64 to bytes
-    base64 = btoa(value);
-    for (let i = 0; i < base64.length; i++) {
-      bytes.push(base64.charCodeAt(i));
-    }
-    // base64 to bigint
-    bigint = BigInt(0);
-    for (let i = 0; i < bytes.length; i++) {
-      bigint = bigint << 8n;
-      bigint = bigint | BigInt(bytes[i]);
-    }
-    return bigint;
-  };
-
-  const decode_bytes = (bigint: bigint) => {
-    // declare variables
-    const bytes: number[] = [];
-    let base64 = '';
-    let value = '';
-    // bigint to base64
-    // mask 8 bits at a time, shifting them to the right until bigint is 0
-    while (bigint > 0) {
-      const char: bigint = bigint & 0xffn;
-      bytes.push(parseInt(char.toString()));
-      bigint = bigint >> 8n;
-    }
-    // reverse bytes to base64
-    for (let i = bytes.length - 1; i >= 0; i--) {
-      base64 += String.fromCharCode(bytes[i]);
-    }
-    // reverse base64 to string
-    value = atob(base64);
-    return value;
-  };
-
   const handleSubmit = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();
@@ -154,19 +128,19 @@ const Editor: FC = () => {
     console.log(content_ciphertext);
 
     // Make immutable hash of the string values.
-    const title_address = await (ipfs as IPFSHTTPClient).add(title_ciphertext);
-    const template_address = await (ipfs as IPFSHTTPClient).add(template_ciphertext);
-    const content_address = await (ipfs as IPFSHTTPClient).add(content_ciphertext);
+    const title_address = await ipfsAdd(title_ciphertext);
+    const template_address = await ipfsAdd(template_ciphertext);
+    const content_address = await ipfsAdd(content_ciphertext);
 
-    console.log('title_address', title_address.path);
-    console.log('template_address', template_address.path);
-    console.log('content_address', content_address.path);
+    console.log('title_address', title_address.Hash);
+    console.log('template_address', template_address.Hash);
+    console.log('content_address', content_address.Hash);
 
-    const title_bigints = padArray(splitStringToBigInts(title_address.path), 4);
-    const template_bigints = padArray(splitStringToBigInts(template_address.path), 4);
-    const content_bigints = padArray(splitStringToBigInts(content_address.path), 4);
-    const group_secret_bigint = padArray([secret], 1);
-    const individual_secret_bigint = padArray([individual_secret], 1);
+    const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
+    const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
+    const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
+    const group_secret_bigint = padArray([BigInt(secret)], 1);
+    const individual_secret_bigint = padArray([BigInt(individual_secret)], 1);
     const shared_secret_bigints = padArray(splitStringToBigInts(shared_secret), 4);
     const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 7);
 
@@ -233,28 +207,23 @@ const Editor: FC = () => {
         <WalletMultiButton />
       </header>
       <div className="App-sidebar">
-        <EditorToolbar programId={NewsletterProgramId} useWallet={useWallet} ipfs={ipfs} />
+        <EditorToolbar
+          programId={NewsletterProgramId}
+          useWallet={useWallet}
+          privacy={privacy_mode}
+          setRecord={setRecord}
+        />
       </div>
       <div className="App-body">
         <div className="App-body-controls">
           <label>
-            IPFS Status:{' '}
-            {(!ipfs && (
-              <span>
-                <span role="img" aria-label="loading">
-                  ⏳
-                </span>{' '}
-                Loading...
-              </span>
-            )) ||
-              (ipfs && (
-                <span>
-                  <span role="img" aria-label="loaded">
-                    ✅
-                  </span>{' '}
-                  Loaded
-                </span>
-              ))}
+            {(privacy_mode && 'Privacy mode (on) ') || 'Privacy mode (off)'}
+            <Toggle
+              defaultChecked={privacy_mode}
+              onChange={() => {
+                setPrivacyMode(!privacy_mode);
+              }}
+            />
           </label>
           <label>
             {(template_mode && 'Template mode (on) ') || 'Template mode (off)'}
@@ -271,7 +240,7 @@ const Editor: FC = () => {
             className="App-body-editor"
             height={'54vh'}
             value={template_mode ? template : content}
-            onChange={template_mode ? setTemplate : setContent}
+            onChange={() => (template_mode ? setTemplate : setContent)}
           />
           <div className="App-body-form-footer">
             <label>
@@ -279,7 +248,7 @@ const Editor: FC = () => {
               <input
                 className="App-body-form-footer-input"
                 value={fee}
-                onChange={(event) => setFee(event.target.value)}
+                onChange={(event) => setFee(parseInt(event.target.value))}
                 placeholder="Fee"
               />
             </label>
@@ -288,7 +257,7 @@ const Editor: FC = () => {
                 <div>{`Transaction status: ${status}`}</div>
               </div>
             )}
-            <input type="submit" disabled={!publicKey || !ipfs} value="Submit" />
+            <input type="submit" disabled={!publicKey} value="Submit" />
           </div>
         </form>
       </div>

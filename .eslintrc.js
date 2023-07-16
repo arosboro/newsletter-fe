@@ -17,13 +17,17 @@ module.exports = {
     },
     // Tells eslint how to resolve imports
     'import/resolver': {
+      alias: {
+        map: [['@', './src']],
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
       node: {
-        paths: ['src'],
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
     },
   },
   rules: {
     // Add your own rules here to override ones from the extended configs.
+    'import/no-unresolved': 'off', // Turn off "no exports 'main' found" warnings
   },
 };

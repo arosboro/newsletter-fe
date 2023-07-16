@@ -48,6 +48,20 @@
   position: relative;
 }
 
+.App-nav-input {
+  width: 90%;
+  height: 3.25rem;
+  padding: 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+  border-radius: 0.5rem;
+  border: 1px solid #fff;
+  background-color: transparent;
+  color: #fff;
+  transition: border-color 0.25s;
+}
+
 .App-body {
   flex-basis: 0;
   flex-grow: 999;
