@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction, useEffect } from 'react';
 import { resolve_ipfs, NewsletterRecord } from '@/lib/util';
 import { WalletContextState } from '@demox-labs/aleo-wallet-adapter-react';
+import { AddSubscriber } from '@/components/AddSubscriber';
 
 interface Props {
   programId: string;
@@ -75,23 +76,45 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Pro
       </button>
       <hr />
       <input className="App-nav-input" placeholder="Filter" />
+      <hr />
       {publicKey && !isLoading && (
-        <ul className="App-nav-list">
-          {recordsDecrypted.map((record: NewsletterRecord, index: number) => (
-            <li className="{record.idApp-nav-list-item" key={index}>
-              <a
-                href="/#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setRecord(record);
-                }}
-                className="App-nav-list-item-link"
-              >
-                {record && record.data && record.data.title && record.data.title}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <>
+          <h4>Newsletters</h4>
+          <ul className="App-nav-list">
+            {recordsDecrypted.map((value: NewsletterRecord, index: number) => (
+              <li className="{record.idApp-nav-list-item" key={index}>
+                <a
+                  href="/#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setRecord(value);
+                  }}
+                  className="App-nav-list-item-link"
+                >
+                  {(value && record && value.id == record.id && value.data && value.data.title && (
+                    <i>{value.data.title}</i>
+                  )) ||
+                    (value && value.data && value.data.title && value.data.title)}
+                </a>
+              </li>
+            ))}
+          </ul>
+          {record && (
+            <>
+              <hr />
+              <h4>Subscribers</h4>
+              <AddSubscriber
+                programId={programId}
+                useWallet={useWallet}
+                record={
+                  records.filter((rec) => {
+                    return (rec.id = record.id);
+                  })[0]
+                }
+              />
+            </>
+          )}
+        </>
       )}
     </aside>
   );

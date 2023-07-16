@@ -28,6 +28,5 @@ module.exports = {
   },
   rules: {
     // Add your own rules here to override ones from the extended configs.
-    'import/no-unresolved': 'off', // Turn off "no exports 'main' found" warnings
   },
 };

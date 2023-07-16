@@ -54,3 +54,105 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Start Media Queries for Responsive Design */
+/* Desktop / Tablet (Landscape) */
+@media screen and (max-width: 1023px) {
+  body {
+    font-size: 0.9rem;
+  }
+  .App {
+    flex-wrap: wrap;
+  }
+  .App > nav > ul {
+    flex-wrap: wrap;
+  }
+  .App > nav > ul > li {
+    margin-bottom: 1rem;
+  }
+  .App > section {
+    flex-wrap: wrap;
+  }
+  .App-header {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+  .App-header-input {
+    flex-basis: 100%;
+    width: auto;
+  }
+  .App-body {
+    flex-basis: 100%;
+  }
+  .App-body-controls {
+    flex-basis: 100%;
+  }
+  .App-body-form {
+    flex-basis: 100%;
+  }
+  .App-body-form-footer {
+    flex-basis: 100%;
+  }
+  .App-body-form-footer > input {
+    flex-basis: 100%;
+  }
+  .App-body-form-footer-input {
+    flex-basis: 100%;
+    margin-left: 0;
+    margin-top: 0;
+    width: 100%;
+    margin-top: 0;
+    margin-left: 0;
+  }
+}
+
+/* Phone */
+@media screen and (max-width: 767px) {
+  body {
+    font-size: 0.8rem;
+    display: inline;
+  }
+  .App {
+    flex-wrap: wrap;
+  }
+  .App > nav > ul {
+    flex-wrap: wrap;
+  }
+  .App > nav > ul > li {
+    margin-bottom: 1rem;
+  }
+  .App > section {
+    flex-wrap: wrap;
+  }
+  .App-header {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+  .App-header-input {
+    flex-basis: 100%;
+    width: auto;
+  }
+  .App-body {
+    flex-basis: 100%;
+  }
+  .App-body-controls {
+    flex-basis: 100%;
+  }
+  .App-body-form {
+    flex-basis: 100%;
+  }
+  .App-body-form-footer {
+    flex-basis: 100%;
+  }
+  .App-body-form-footer > input {
+    flex-basis: 100%;
+  }
+  .App-body-form-footer-input {
+    flex-basis: 100%;
+    margin-left: 0;
+    margin-top: 0;
+    width: 100%;
+    margin-top: 0;
+    margin-left: 0;
+  }
+}

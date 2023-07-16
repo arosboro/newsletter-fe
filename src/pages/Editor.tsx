@@ -212,6 +212,7 @@ const Editor: FC = () => {
             className="App-header-input"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
+            disabled={privacy_mode}
             placeholder="Title"
           />
         </p>
@@ -252,11 +253,18 @@ const Editor: FC = () => {
             className="App-body-editor"
             height={'54vh'}
             value={template_mode ? template : content}
-            onChange={(value) => (template_mode && setTemplate(value)) || (!template_mode && setContent(value))}
+            onChange={(value) =>
+              (template_mode && privacy_mode && setTemplate(template)) ||
+              (template_mode && !privacy_mode && setTemplate(value)) ||
+              (!template_mode && privacy_mode && setContent(content)) ||
+              (!template_mode && !privacy_mode && setContent(value))
+            }
           />
           <div className="App-body-form-footer">
             <label>
               Fee (Credits):
+              <br />
+              <br />
               <input
                 className="App-body-form-footer-input"
                 value={fee}

@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Graciously borrowed from https://github.com/demox-labs/art-factory/blob/main/src/aleo/rpc.ts
 // All credit goes to the original author.  NFT Functionality removed for this project, replaced by Newsletter functionality.
 
 import { JSONRPCClient } from 'json-rpc-2.0';
-import { NewsletterProgramId } from './newsletter-program';
-import { bigIntToString, joinBigIntsToString, parseStringToBigIntArray } from '../lib/util';
-import assert from 'assert';
+// import { NewsletterProgramId } from './newsletter-program';
+// import { bigIntToString, joinBigIntsToString, parseStringToBigIntArray } from '../lib/util';
+// import assert from 'assert';
 
-export const TESTNET3_API_URL = import.meta.env.VITE_RPC_URL!;
+export const TESTNET3_API_URL = import.meta.env.VITE_RPC_URL as string;
 
 export async function getHeight(apiUrl: string): Promise<number> {
   const client = getClient(apiUrl);
