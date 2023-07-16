@@ -12,7 +12,24 @@ interface Props {
 
 const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Props) => {
   const { publicKey, requestRecords } = useWallet();
-
+  const initRecord = {
+    id: '',
+    owner: '',
+    program_id: '',
+    data: {
+      id: '',
+      op: '',
+      individual_sequence: '',
+      base: '',
+      revision: '',
+      template: '',
+      title: '',
+      content: '',
+      group_secret: '',
+      individual_secret: '',
+    },
+    spent: false,
+  };
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [records, setRecords] = React.useState<NewsletterRecord[]>([]);
   const [recordsDecrypted, setRecordsDecrypted] = React.useState<NewsletterRecord[]>([]);
@@ -37,11 +54,31 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Pro
 
   return (
     <aside className="App-nav">
+      <button
+        className="App-nav-button"
+        onClick={(e) => {
+          e.preventDefault();
+          setRecord(initRecord);
+        }}
+      >
+        New
+      </button>
+      &nbsp;
+      <button
+        className="App-nav-button"
+        onClick={(e) => {
+          e.preventDefault();
+          setRecord(undefined);
+        }}
+      >
+        Example
+      </button>
+      <hr />
       <input className="App-nav-input" placeholder="Filter" />
       {publicKey && !isLoading && (
         <ul className="App-nav-list">
           {recordsDecrypted.map((record: NewsletterRecord, index: number) => (
-            <li className="App-nav-list-item" key={index}>
+            <li className="{record.idApp-nav-list-item" key={index}>
               <a
                 href="/#"
                 onClick={(e) => {

@@ -158,7 +158,7 @@ export const resolve_ipfs = async (
   privacy: boolean,
   setIsLoading: (isLoading: boolean) => void,
   setRecordsDecrypted: (recordsDecoded: NewsletterRecord[]) => void,
-  record: NewsletterRecord,
+  old_record: NewsletterRecord | undefined,
   setRecord: (record: NewsletterRecord) => void,
 ) => {
   const resolve = async (path: string) => {
@@ -203,9 +203,9 @@ export const resolve_ipfs = async (
   }
   console.log(data, 'ipfs data');
   setRecordsDecrypted(data);
-  if (typeof record !== 'undefined') {
-    const record_updated: NewsletterRecord | undefined = data.find((record) => record.id === record.id);
-    setRecord(record_updated);
+  if (typeof old_record !== 'undefined') {
+    const record_updated: NewsletterRecord | undefined = data.find((record) => record.id === old_record.id);
+    if (typeof record_updated !== 'undefined') setRecord(record_updated);
   }
 
   setIsLoading(false);

@@ -49,10 +49,10 @@ const Editor: FC = () => {
   ## Meetups
 
 `;
-  const [title, setTitle] = React.useState<string>(defaultTitle);
-  const [template, setTemplate] = React.useState<string>(defaultTemplate);
+  const [title, setTitle] = React.useState<string | undefined>(defaultTitle);
+  const [template, setTemplate] = React.useState<string | undefined>(defaultTemplate);
   const [template_mode, setTemplateMode] = React.useState<boolean>(true);
-  const [content, setContent] = React.useState<string>(template);
+  const [content, setContent] = React.useState<string | undefined>(template);
   // Get the inital secret as a random string of chacters from a whole number
   const initSecret = (): bigint => {
     // Calcuate a 64-bit random integer and subtract 4 bytes
@@ -75,11 +75,17 @@ const Editor: FC = () => {
   useEffect(() => {
     if (typeof publicKey === 'string') {
       // Title ciphertext
-      setTitleCiphertext(CryptoJS.AES.encrypt(title, secret).toString());
+      if (typeof title === 'string') {
+        setTitleCiphertext(CryptoJS.AES.encrypt(title, secret).toString());
+      }
       // Template ciphertext
-      setTemplateCiphertext(CryptoJS.AES.encrypt(template, secret).toString());
+      if (typeof template === 'string') {
+        setTemplateCiphertext(CryptoJS.AES.encrypt(template, secret).toString());
+      }
       // Content ciphertext
-      setContentCiphertext(CryptoJS.AES.encrypt(content, secret).toString());
+      if (typeof content === 'string') {
+        setContentCiphertext(CryptoJS.AES.encrypt(content, secret).toString());
+      }
       // Shared secret
       setSharedSecret(CryptoJS.AES.encrypt(individual_secret, secret).toString());
       // Shared recipient
@@ -99,6 +105,10 @@ const Editor: FC = () => {
         setTemplate(record.data.template);
         setContent(record.data.content);
       }
+    } else {
+      setTitle(defaultTitle);
+      setTemplate(defaultTemplate);
+      setContent(defaultTemplate);
     }
   }, [record]);
 
@@ -242,9 +252,7 @@ const Editor: FC = () => {
             className="App-body-editor"
             height={'54vh'}
             value={template_mode ? template : content}
-            onChange={(value) =>
-              (template_mode && value && setTemplate(value)) || (!template_mode && value && setContent(value))
-            }
+            onChange={(value) => (template_mode && setTemplate(value)) || (!template_mode && setContent(value))}
           />
           <div className="App-body-form-footer">
             <label>

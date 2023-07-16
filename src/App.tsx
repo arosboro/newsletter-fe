@@ -31,15 +31,17 @@ const App: FC = () => {
     <WalletProvider wallets={wallets} decryptPermission={DecryptPermission.AutoDecrypt}>
       <WalletModalProvider>
         <div className="App">
-          <Router>
-            <Navbar isDeployed={!isLoading && !!data} />
-            <Routes>
-              <Route path="/" element={<Editor />} />
-              <Route path="/consume" element={<Reader />} />
-              <Route path="/deploy" element={<Deploy />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Router>
+          {(!error && (
+            <Router>
+              <Navbar isDeployed={!isLoading && !!data} />
+              <Routes>
+                <Route path="/" element={<Editor />} />
+                <Route path="/consume" element={<Reader />} />
+                <Route path="/deploy" element={<Deploy />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Router>
+          )) || <div>Failed to load program data</div>}
         </div>
       </WalletModalProvider>
     </WalletProvider>
