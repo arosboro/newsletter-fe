@@ -89,6 +89,7 @@ const Editor: FC = () => {
 
   useEffect(() => {
     if (typeof record !== 'undefined') {
+      console.log(record);
       if (
         typeof record.data.title === 'string' &&
         typeof record.data.template === 'string' &&
@@ -211,6 +212,7 @@ const Editor: FC = () => {
           programId={NewsletterProgramId}
           useWallet={useWallet}
           privacy={privacy_mode}
+          record={record}
           setRecord={setRecord}
         />
       </div>
@@ -240,7 +242,9 @@ const Editor: FC = () => {
             className="App-body-editor"
             height={'54vh'}
             value={template_mode ? template : content}
-            onChange={() => (template_mode ? setTemplate : setContent)}
+            onChange={(value) =>
+              (template_mode && value && setTemplate(value)) || (!template_mode && value && setContent(value))
+            }
           />
           <div className="App-body-form-footer">
             <label>

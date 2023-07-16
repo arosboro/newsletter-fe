@@ -6,10 +6,11 @@ interface Props {
   programId: string;
   useWallet: () => WalletContextState;
   privacy: boolean;
+  record: NewsletterRecord | undefined;
   setRecord: Dispatch<SetStateAction<NewsletterRecord | undefined>>;
 }
 
-const EditorToolbar = ({ programId, useWallet, privacy, setRecord }: Props) => {
+const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Props) => {
   const { publicKey, requestRecords } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -30,7 +31,8 @@ const EditorToolbar = ({ programId, useWallet, privacy, setRecord }: Props) => {
   }, [publicKey, programId]);
 
   useEffect(() => {
-    if (records && records.length >= 1) resolve_ipfs(records, privacy, setIsLoading, setRecordsDecrypted);
+    if (records && records.length >= 1)
+      resolve_ipfs(records, privacy, setIsLoading, setRecordsDecrypted, record, setRecord);
   }, [records, privacy]);
 
   return (

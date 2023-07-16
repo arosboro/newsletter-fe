@@ -158,6 +158,8 @@ export const resolve_ipfs = async (
   privacy: boolean,
   setIsLoading: (isLoading: boolean) => void,
   setRecordsDecrypted: (recordsDecoded: NewsletterRecord[]) => void,
+  record: NewsletterRecord,
+  setRecord: (record: NewsletterRecord) => void,
 ) => {
   const resolve = async (path: string) => {
     console.log('Fetching from IPFS: ' + path); // IPFS Hash/Address
@@ -201,5 +203,10 @@ export const resolve_ipfs = async (
   }
   console.log(data, 'ipfs data');
   setRecordsDecrypted(data);
+  if (typeof record !== 'undefined') {
+    const record_updated: NewsletterRecord | undefined = data.find((record) => record.id === record.id);
+    setRecord(record_updated);
+  }
+
   setIsLoading(false);
 };
