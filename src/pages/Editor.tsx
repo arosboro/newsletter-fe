@@ -66,7 +66,7 @@ const Editor: FC = () => {
   const [content_ciphertext, setContentCiphertext] = React.useState('');
   const [shared_secret, setSharedSecret] = React.useState('');
   const [shared_recipient, setSharedRecipient] = React.useState('');
-  const [fee, setFee] = React.useState<number>(11.11);
+  const [fee, setFee] = React.useState<string>('11.11');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
   const [privacy_mode, setPrivacyMode] = React.useState<boolean>(false);
@@ -180,8 +180,9 @@ const Editor: FC = () => {
     ];
 
     console.log(inputs);
+    const fee_value: number = parseFloat(fee) || 1.0;
 
-    const fee_microcredits = 1_000_000 * fee; // This will fail if fee is not set high enough
+    const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
 
     const aleoTransaction = Transaction.createTransaction(
       publicKey,
@@ -268,7 +269,7 @@ const Editor: FC = () => {
               <input
                 className="App-body-form-footer-input"
                 value={fee}
-                onChange={(event) => setFee(parseInt(event.target.value))}
+                onChange={(event) => setFee(event.target.value)}
                 placeholder="Fee"
               />
             </label>

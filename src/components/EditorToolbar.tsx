@@ -20,7 +20,7 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Pro
     data: {
       id: '',
       op: '',
-      individual_sequence: '',
+      member_sequence: '',
       base: '',
       revision: '',
       template: '',
@@ -34,19 +34,26 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Pro
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [records, setRecords] = React.useState<NewsletterRecord[]>([]);
   const [recordsDecrypted, setRecordsDecrypted] = React.useState<NewsletterRecord[]>([]);
+  const [status, setStatus] = React.useState<string | undefined>();
 
   useEffect(() => {
     const fetch = async (programId: string) => {
-      if (publicKey && requestRecords) {
+      if (
+        (publicKey && requestRecords && typeof status === 'undefined') ||
+        (publicKey && requestRecords && status === 'Finalized')
+      ) {
         console.log(programId);
         const res = await requestRecords(programId);
-        setRecords(res.filter((record: NewsletterRecord) => !record.spent));
+        setRecords(res.filter((record: NewsletterRecord) => !record.spent && Object.keys(record.data).length === 10));
         setIsLoading(true);
         console.log(records, 'records');
+        if (status === 'Finalized') {
+          setStatus(undefined);
+        }
       }
     };
     fetch(programId);
-  }, [publicKey, programId]);
+  }, [publicKey, programId, status]);
 
   useEffect(() => {
     if (records && records.length >= 1)
@@ -99,13 +106,14 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Pro
               </li>
             ))}
           </ul>
-          {record && (
+          {record && record.id && (
             <>
               <hr />
               <h4>Subscribers</h4>
               <AddSubscriber
                 programId={programId}
                 useWallet={useWallet}
+                setParentStatus={setStatus}
                 record={
                   records.filter((rec) => {
                     return (rec.id = record.id);

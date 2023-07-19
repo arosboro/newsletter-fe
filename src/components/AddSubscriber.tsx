@@ -8,15 +8,16 @@ import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 interface Props {
   programId: string;
   useWallet: () => WalletContextState;
+  setParentStatus: (value: React.SetStateAction<string | undefined>) => void;
   record: NewsletterRecord | undefined;
 }
 
-export const AddSubscriber = ({ programId, useWallet, record }: Props) => {
+export const AddSubscriber = ({ programId, useWallet, setParentStatus, record }: Props) => {
   const { wallet, publicKey, requestTransaction } = useWallet();
 
   const [invite_mode, setIsInviteMode] = React.useState<boolean>(false);
   const [address, setAddress] = React.useState<string>('');
-  const [fee, setFee] = React.useState<number>(3.33);
+  const [fee, setFee] = React.useState<string>('1.508807');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
 
@@ -43,11 +44,12 @@ export const AddSubscriber = ({ programId, useWallet, record }: Props) => {
     console.log(record);
 
     // The record here is an output from the Requesting Records above
-    const inputs = [JSON.stringify(record.data), address];
+    const inputs = [record, address];
 
     console.log(inputs);
+    const fee_value: number = parseFloat(fee) || 1.0;
 
-    const fee_microcredits = 1_000_000 * fee; // This will fail if fee is not set high enough
+    const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
 
     const aleoTransaction = Transaction.createTransaction(
       publicKey,
@@ -67,6 +69,9 @@ export const AddSubscriber = ({ programId, useWallet, record }: Props) => {
 
   const getTransactionStatus = async (txId: string) => {
     const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
+    if (status === 'Finalized') {
+      setParentStatus(status);
+    }
     setStatus(status);
   };
 
@@ -102,12 +107,10 @@ export const AddSubscriber = ({ programId, useWallet, record }: Props) => {
               placeholder="Fee"
               value={fee}
               onChange={(e) => {
-                setFee(parseInt(e.target.value));
+                setFee(e.target.value || '0.0');
               }}
             />
-            <button disabled={!publicKey || !address} className="App-nav-button send-invite">
-              Send Invite
-            </button>
+            <input type="submit" disabled={!publicKey || !address} className="send-invite" value="Send Invite" />
           </form>
           {transactionId && (
             <div>

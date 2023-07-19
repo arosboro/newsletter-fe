@@ -62,7 +62,7 @@
   transition: border-color 0.25s;
 }
 
-.App-nav-button.send-invite {
+.send-invite {
   margin-top: 1rem;
   height: 3.25rem;
   width: 100%;
@@ -74,6 +74,23 @@
   background-color: transparent;
   color: #fff;
   transition: border-color 0.25s;
+}
+
+.send-invite::disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+send-invite:hover {
+  border-color: #646cff;
+}
+
+.send-invite:focus {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.send-invite:focus-visible {
+  border-color: #646cff;
 }
 
 .App-body {

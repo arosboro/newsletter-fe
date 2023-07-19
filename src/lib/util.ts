@@ -13,7 +13,7 @@ export interface NewsletterRecord {
   data: {
     id: string;
     op: string;
-    individual_sequence: string;
+    member_sequence: string;
     base: string;
     revision: string;
     template: string[] | string;
@@ -22,6 +22,30 @@ export interface NewsletterRecord {
     group_secret: string;
     individual_secret: string;
   };
+}
+
+export interface SubscriptionRecord {
+  id: string;
+  owner: string;
+  program_id: string;
+  spent: boolean;
+  data: {
+    owner: string;
+    op: string;
+    id: string;
+    member_sequence: string;
+    member_secret_idx: string;
+  };
+}
+
+export interface SharedSecret {
+  shared_secret: string[] | string;
+  recipient: string[] | string;
+}
+
+export interface SharedSecretMapping {
+  key: string;
+  value: SharedSecret;
 }
 
 export function safeParseInt(value: string): number {
@@ -151,6 +175,14 @@ export const decrypt = (aes_ciphertext: string, secret: string): string => {
     plaintext = CryptoJS.AES.decrypt(aes_ciphertext, secret).toString(CryptoJS.enc.Utf8);
   }
   return plaintext;
+};
+
+export const isNewsletterRecord = (record: NewsletterRecord | SubscriptionRecord): record is NewsletterRecord => {
+  return (record as NewsletterRecord).data.base !== undefined;
+};
+
+export const isSubscriptionRecord = (record: NewsletterRecord | SubscriptionRecord): record is SubscriptionRecord => {
+  return (record as SubscriptionRecord).data.member_secret_idx !== undefined;
 };
 
 export const resolve_ipfs = async (

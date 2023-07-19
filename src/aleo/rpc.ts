@@ -61,6 +61,21 @@ export async function getTransaction(apiUrl: string, transactionId: string): Pro
   return transaction;
 }
 
+export async function getMapping(
+  apiUrl: string,
+  programId: string,
+  mappingName: string,
+  mappingKey: string,
+): Promise<any> {
+  const mappingUrl = `${apiUrl}/testnet3/program/${programId}/mappings`;
+  const response = await fetch(`${mappingUrl}/${mappingName}/${mappingKey}`);
+  if (!response.ok) {
+    throw new Error('Mapping not found');
+  }
+  const mapping = await response.json();
+  return mapping;
+}
+
 export const getClient = (apiUrl: string) => {
   const client = new JSONRPCClient((jsonRPCRequest: any) =>
     fetch(apiUrl, {
