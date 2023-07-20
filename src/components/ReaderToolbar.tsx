@@ -99,28 +99,18 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord, statu
     }
   }, [recordsDecrypted, invites]);
 
-  // useEffect(() => {
-  //   if (records.length >= 1 && recordsDecrypted.length >= 1) {
-  //     console.log(records, 'records');
-  //     console.log(subscriptions, 'subscriptions');
+  useEffect(() => {
+    if (records.length >= 1 && recordsDecrypted.length >= 1) {
+      console.log(records, 'records');
+      console.log(subscriptions, 'subscriptions');
 
-  //     // Get subscription records from recordsDecrypted, where the data.id matches the decrypted invite id
-  //     if (subscriptions && subscriptions.length >= 1 && recordsDecrypted && recordsDecrypted.length >= 1) {
-  //       const newsletter_names = .map((subscription: SubscriptionRecord) => subscription.id);
-  //       const subscription_newsletter_ids = subscriptions.map(
-  //         (subscription: SubscriptionRecord) => subscription.data.id,
-  //       );
-  //       setSubscriptionMap(
-  //         new Map(
-  //           subscription_newsletter_ids.map((id: string, index: number) => {
-  //             return [id, subscription_ids[index]];
-  //           }),
-  //         ),
-  //       );
-  //       console.log(subscriptionMap, 'subscriptionMap');
-  //     }
-  //   }
-  // }, [subscriptions]);
+      // Get subscription records from recordsDecrypted, where the data.id matches the decrypted invite id
+      if (subscriptions && subscriptions.length >= 1 && recordsDecrypted && recordsDecrypted.length >= 1) {
+        console.log(subscriptionMap, 'subscriptionMap');
+        setSubscriptionMap(new Map());
+      }
+    }
+  }, [subscription]);
 
   useEffect(() => {
     if (records.length >= 1 && recordsDecrypted.length >= 1) {
@@ -171,7 +161,7 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord, statu
               <hr />
             </>
           )}
-          {/* 
+
           {subscriptions.length >= 1 && (
             <>
               <h4>Subscriptions</h4>
@@ -186,14 +176,14 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord, statu
                       }}
                       className="App-nav-list-item-link"
                     >
-                      {subscriptionMap[value.id]}
+                      {value.data.id.slice(0, -8)}
                     </a>
                   </li>
                 ))}
               </ul>
               <hr />
             </>
-          )} */}
+          )}
 
           {issuesDecrypted.length >= 1 && (
             <>

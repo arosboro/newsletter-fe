@@ -47,7 +47,7 @@ export const Subscribers = ({ programId, useWallet, parent_status, record }: Pro
 
   return (
     <>
-      <ul></ul>
+      <p>{JSON.stringify(record)}</p>
     </>
   );
 };
