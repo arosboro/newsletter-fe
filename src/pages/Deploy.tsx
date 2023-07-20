@@ -12,7 +12,7 @@ const Deploy: FC = () => {
   const { wallet, publicKey } = useWallet();
   const { data, error, isLoading } = useSWR('programData', () => getProgram(NewsletterProgramId, TESTNET3_API_URL));
 
-  const [program, _setProgram] = useState(NewsletterProgram);
+  const [program] = useState(NewsletterProgram)[0];
   const [fee, setFee] = useState<string>('9.99');
   const [transactionId, setTransactionId] = useState<string | undefined>();
   const [status, setStatus] = useState<string | undefined>();
@@ -65,7 +65,8 @@ const Deploy: FC = () => {
       </div>
       <div className="App-body">
         {isLoading && <p>Loading...</p>}
-        {!isLoading && data && (
+        {error && <p>Failed to load program data</p>}
+        {!isLoading && !error && data && (
           <div className="program-deployed">
             {`${NewsletterProgramId}`} is already deployed{' '}
             <a
