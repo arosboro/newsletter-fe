@@ -2,6 +2,7 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
+  width: 100%;
 }
 
 /* Flex layout with header/footer and sidebar to left of body */
@@ -127,6 +128,7 @@
   .App-header {
     flex-basis: 100%;
     flex-wrap: wrap;
+    margin-top: 1rem;
   }
   .App-header-input {
     flex-basis: 100%;

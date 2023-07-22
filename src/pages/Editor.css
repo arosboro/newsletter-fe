@@ -5,6 +5,11 @@
   vertical-align: center;
   gap: 1rem;
   margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.App-header > button {
+  margin-top: 1rem;
 }
 
 /* A text input as large as both App-sidebar and App-body */
@@ -19,6 +24,7 @@
   font-size: 1.5rem;
   font-weight: 500;
   line-height: 1.1;
+  margin-top: 1rem;
   transition: border-color 0.25s;
 }
 
