@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect } from 'react';
-import { resolve_ipfs, NewsletterRecord } from '@/lib/util';
+import { resolve_ipfs, NewsletterRecord, isNewsletterRecord, SubscriptionRecord } from '@/lib/util';
 import { WalletContextState } from '@demox-labs/aleo-wallet-adapter-react';
 import { AddSubscriber } from '@/components/AddSubscriber';
 
@@ -44,7 +44,12 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Pro
       ) {
         console.log(programId);
         const res = await requestRecords(programId);
-        setRecords(res.filter((record: NewsletterRecord) => !record.spent && Object.keys(record.data).length === 10));
+        setRecords(
+          res.filter(
+            (record: NewsletterRecord | SubscriptionRecord) =>
+              !record.spent && isNewsletterRecord(record) && record.data.op.slice(0, -8) == publicKey,
+          ),
+        );
         setIsLoading(true);
         console.log(records, 'records');
         if (status === 'Finalized') {
