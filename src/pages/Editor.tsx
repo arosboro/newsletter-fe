@@ -208,15 +208,13 @@ const Editor: FC = () => {
   return (
     <section className="Editor">
       <header className="App-header">
-        <p>
-          <input
-            className="App-header-input"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            disabled={privacy_mode}
-            placeholder="Title"
-          />
-        </p>
+        <input
+          className="App-header-input"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          disabled={privacy_mode}
+          placeholder="Title"
+        />
         <WalletMultiButton />
       </header>
       <div className="App-sidebar">

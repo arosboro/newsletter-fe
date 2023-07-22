@@ -9,7 +9,7 @@
 
 /* A text input as large as both App-sidebar and App-body */
 .App-header > h1 {
-  width: 64rem;
+  width: 100%;
   gap: 1rem;
   margin-block-end: 16px;
   margin-block-start: 16px;

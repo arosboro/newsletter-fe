@@ -110,7 +110,7 @@
 @media screen and (max-width: 767px) {
   body {
     font-size: 0.8rem;
-    display: inline;
+    display: inline !important;
   }
   .App {
     flex-wrap: wrap;
@@ -130,7 +130,7 @@
   }
   .App-header-input {
     flex-basis: 100%;
-    width: auto;
+    width: 94%;
   }
   .App-body {
     flex-basis: 100%;
@@ -151,7 +151,7 @@
     flex-basis: 100%;
     margin-left: 0;
     margin-top: 0;
-    width: 100%;
+    width: 94%;
     margin-top: 0;
     margin-left: 0;
   }
