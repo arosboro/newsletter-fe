@@ -66,7 +66,7 @@ const Editor: FC = () => {
   const [content_ciphertext, setContentCiphertext] = React.useState('');
   const [shared_secret, setSharedSecret] = React.useState('');
   const [shared_recipient, setSharedRecipient] = React.useState('');
-  const [fee, setFee] = React.useState<string>('11.11');
+  const [fee, setFee] = React.useState<string>('3.0365');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
   const [privacy_mode, setPrivacyMode] = React.useState<boolean>(false);

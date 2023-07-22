@@ -33,7 +33,7 @@ Ask someone to invite you to a Newsletter or create one.  New issues will appear
   const setTitleCiphertext = React.useState('')[1];
   const setContentCiphertext = React.useState('')[1];
   const [record, setRecord] = React.useState<NewsletterRecord>();
-  const [fee, setFee] = React.useState<string>('1.508807');
+  const [fee, setFee] = React.useState<string>('1.529307');
   const [privacy_mode, setPrivacyMode] = React.useState(false);
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
