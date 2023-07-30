@@ -8,48 +8,38 @@ import ReaderToolbar from '@/components/ReaderToolbar';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import Toggle from 'react-toggle';
-import { NewsletterRecord, padArray, splitStringToBigInts } from '@/lib/util';
+import { padArray, splitStringToBigInts } from '@/lib/util';
 import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@demox-labs/aleo-wallet-adapter-base';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch } from '@/app/store';
+import {
+  selectContent,
+  selectNewsletter,
+  selectPrivacyMode,
+  selectTitle,
+  togglePrivacyMode,
+} from '@/features/newsletters/newslettersSlice';
 
 const Reader: FC = () => {
   const { wallet, publicKey, requestTransaction } = useWallet();
+  const newsletter = useSelector(selectNewsletter);
+  const title = useSelector(selectTitle);
+  const content = useSelector(selectContent);
+  const privacy_mode: boolean = useSelector(selectPrivacyMode);
+  const dispatch = useDispatch<AppDispatch>();
 
-  const defaultTitle = 'You are not a member of any newsletters';
-  const defaultContent = `
-**Crickets**
-
-Ask someone to invite you to a Newsletter or create one.  New issues will appear here.`;
   const initSecret = (): bigint => {
     // Calcuate a 64-bit random integer and subtract 4 bytes
     const seed = BigInt(Math.floor(Math.random() * 2 ** 64)) - BigInt(4);
     return seed;
   };
 
-  const [title, setTitle] = React.useState(defaultTitle);
-  const [content, setContent] = React.useState(defaultContent);
   // Get the inital secret as a random string of chacters from a whole number
   const secret = React.useState(initSecret().toString())[0];
-  const setTitleCiphertext = React.useState('')[1];
-  const setContentCiphertext = React.useState('')[1];
-  const [record, setRecord] = React.useState<NewsletterRecord>();
   const [fee, setFee] = React.useState<string>('1.529307');
-  const [privacy_mode, setPrivacyMode] = React.useState(false);
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
-
-  useEffect(() => {
-    if (typeof publicKey === 'string') {
-      // Title ciphertext
-      if (typeof title === 'string') {
-        setTitleCiphertext(CryptoJS.AES.encrypt(title, secret).toString());
-      }
-      // Content ciphertext
-      if (typeof content === 'string') {
-        setContentCiphertext(CryptoJS.AES.encrypt(content, secret).toString());
-      }
-    }
-  }, [title, content, secret, publicKey]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -67,39 +57,22 @@ Ask someone to invite you to a Newsletter or create one.  New issues will appear
     };
   }, [transactionId]);
 
-  useEffect(() => {
-    if (typeof record !== 'undefined') {
-      console.log(record);
-      if (
-        typeof record.data.title === 'string' &&
-        typeof record.data.template === 'string' &&
-        typeof record.data.content === 'string'
-      ) {
-        setTitle(record.data.title);
-        setContent(record.data.content);
-      }
-    } else {
-      setTitle(defaultTitle);
-      setContent(defaultContent);
-    }
-  }, [record]);
-
   const handleAcceptInvite = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!publicKey) throw new WalletNotConnectedError();
-    if (!record) throw new Error('No record found');
-    console.log(record);
+    if (!newsletter) throw new Error('No newsletter found');
+    console.log(newsletter);
 
-    // The record here is an output from the Requesting Records above
+    // The newsletter here is an output from the Requesting Records above
     // newsletter: Newsletter, secret: u128, shared_secret: Bytes64, shared_recipient: Bytes112
     const secret_bigint = padArray([BigInt(secret)], 1);
     const shared_secret_bigints = padArray(
-      splitStringToBigInts(CryptoJS.AES.encrypt(secret, record.data.group_secret.slice(0, -8)).toString()),
+      splitStringToBigInts(CryptoJS.AES.encrypt(secret, newsletter.data.group_secret.slice(0, -8)).toString()),
       4,
     );
     const shared_recipient_bigints = padArray(
-      splitStringToBigInts(CryptoJS.AES.encrypt(publicKey, record.data.group_secret.slice(0, -8)).toString()),
+      splitStringToBigInts(CryptoJS.AES.encrypt(publicKey, newsletter.data.group_secret.slice(0, -8)).toString()),
       7,
     );
 
@@ -113,9 +86,9 @@ Ask someone to invite you to a Newsletter or create one.  New issues will appear
       return result;
     };
 
-    // The record here is an output from the Requesting Records above
+    // The newsletter here is an output from the Requesting Records above
     const inputs = [
-      record,
+      newsletter,
       `${secret_bigint[0]}u128`,
       `${format_bigints(shared_secret_bigints)}`,
       `${format_bigints(shared_recipient_bigints)}`,
@@ -154,28 +127,15 @@ Ask someone to invite you to a Newsletter or create one.  New issues will appear
         <WalletMultiButton />
       </header>
       <div className="App-sidebar">
-        <ReaderToolbar
-          programId={NewsletterProgramId}
-          useWallet={useWallet}
-          privacy={privacy_mode}
-          record={record}
-          setRecord={setRecord}
-          status={status}
-          setStatus={setStatus}
-        />
+        <ReaderToolbar />
       </div>
       <div className="App-body">
         <div className="App-body-controls">
           <label>
             {(privacy_mode && 'Privacy mode (on) ') || 'Privacy mode (off)'}
-            <Toggle
-              defaultChecked={privacy_mode}
-              onChange={() => {
-                setPrivacyMode(!privacy_mode);
-              }}
-            />
+            <Toggle defaultChecked={privacy_mode} onChange={() => dispatch(togglePrivacyMode())} />
           </label>
-          {record && record.data.op.slice(0, -8) !== publicKey && record.data.revision.slice(0, -8) === 'false' && (
+          {newsletter && newsletter.data && newsletter.data.op !== publicKey && !newsletter.data.revision && (
             <div className="App-body-controls-invite-form">
               <form onSubmit={handleAcceptInvite}>
                 <label>

@@ -28,5 +28,7 @@ module.exports = {
   },
   rules: {
     // Add your own rules here to override ones from the extended configs.
+    '@typescript-eslint/no-non-null-assertion': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
   },
 };

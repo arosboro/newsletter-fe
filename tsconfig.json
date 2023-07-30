@@ -13,8 +13,10 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "noEmit": true,
+    "noImplicitAny": false,
     "jsx": "preserve",
     "incremental": true,
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["./src/*"]
     },

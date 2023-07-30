@@ -14,6 +14,8 @@ import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
 import '@/App.css';
 import { TESTNET3_API_URL, getProgram } from '@/aleo/rpc';
 import { NewsletterProgramId } from './aleo/newsletter-program';
+import ErrorBoundary from './containers/ErrorBoundary';
+import Layout from './containers/Layout';
 
 const App: FC = () => {
   const wallets = useMemo(
@@ -28,23 +30,25 @@ const App: FC = () => {
   const { data, error, isLoading } = useSWR('programData', () => getProgram(NewsletterProgramId, TESTNET3_API_URL));
 
   return (
-    <WalletProvider wallets={wallets} decryptPermission={DecryptPermission.AutoDecrypt}>
-      <WalletModalProvider>
-        <div className="App">
-          {(!error && (
-            <Router>
-              <Navbar isDeployed={!isLoading && !!data} />
-              <Routes>
-                <Route path="/" element={<Editor />} />
-                <Route path="/consume" element={<Reader />} />
-                <Route path="/deploy" element={<Deploy />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Router>
-          )) || <div>Failed to load program data</div>}
-        </div>
-      </WalletModalProvider>
-    </WalletProvider>
+    <ErrorBoundary>
+      <WalletProvider wallets={wallets} decryptPermission={DecryptPermission.AutoDecrypt}>
+        <WalletModalProvider>
+          <Layout className="App">
+            {(!error && (
+              <Router>
+                <Navbar isDeployed={!isLoading && !!data} />
+                <Routes>
+                  <Route path="/" element={<Editor />} />
+                  <Route path="/consume" element={<Reader />} />
+                  <Route path="/deploy" element={<Deploy />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Router>
+            )) || <div>Failed to load program data</div>}
+          </Layout>
+        </WalletModalProvider>
+      </WalletProvider>
+    </ErrorBoundary>
   );
 };
 
