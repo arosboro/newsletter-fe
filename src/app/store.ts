@@ -4,10 +4,6 @@ import recordsReducer, { fetchRecords } from '@/features/records/recordsSlice';
 import newslettersReducer, {
   decryptNewsletterRecords,
   resolveNewsletterRecords,
-  setContent,
-  setNewsletter,
-  setTemplate,
-  setTitle,
 } from '@/features/newsletters/newslettersSlice';
 import subscriptionsReducer, {
   lookupSubscriptionRecords,
@@ -27,13 +23,6 @@ const newsletterMiddleware = (storeAPI: any) => (next: Dispatch<AnyAction>) => (
   }
   if (resolveNewsletterRecords.fulfilled.match(action)) {
     storeAPI.dispatch(decryptNewsletterRecords(action.payload));
-  }
-  if (setNewsletter.match(action)) {
-    console.log('setNewsletter', action.payload);
-    const data = action.payload.data;
-    storeAPI.dispatch(setTitle(data.title as string));
-    storeAPI.dispatch(setTemplate(data.template as string));
-    storeAPI.dispatch(setContent(data.content as string));
   }
   return next(action);
 };

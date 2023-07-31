@@ -56,7 +56,7 @@ const ReaderToolbar: FC = () => {
               <h4>Invites</h4>
               <ul className="App-nav-list">
                 {invites.map((value: NewsletterRecord, index: number) => (
-                  <li className="{record.idApp-nav-list-item" key={index}>
+                  <li className="{App-nav-list-item" key={index}>
                     <a
                       href="/#"
                       onClick={(e) => {

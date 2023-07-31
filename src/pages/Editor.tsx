@@ -27,6 +27,8 @@ import {
   toggleTemplateMode,
   selectGroupSecret,
   selectIndividualSecret,
+  NewsletterRecord,
+  selectNewsletter,
 } from '@/features/newsletters/newslettersSlice';
 import 'react-toggle/style.css';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
@@ -44,6 +46,7 @@ const Editor: FC = () => {
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
   const secret: string = useSelector(selectGroupSecret);
   const individual_secret: string = useSelector(selectIndividualSecret);
+  const newsletter: NewsletterRecord = useSelector(selectNewsletter);
   const dispatch = useDispatch<AppDispatch>();
 
   // Long assignment of a template string to a variable
@@ -70,28 +73,21 @@ const Editor: FC = () => {
     };
   }, [transactionId]);
 
-  const handleSubmit = async (event: ChangeEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    // set the sharedSecret and sharedRecipient
+    if (!publicKey) return;
+    setSharedSecret(encrypt(individual_secret, secret));
+    setSharedRecipient(encrypt(publicKey, secret));
+  }, [secret, individual_secret, publicKey]);
+
+  const handleCreateNewsletter = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();
-
-    console.log(publicKey);
-    console.log(secret);
-    console.log(title_ciphertext);
-    console.log(template_ciphertext);
-    console.log(content_ciphertext);
 
     // Make immutable hash of the string values.
     const title_address = await ipfsAdd(title_ciphertext);
     const template_address = await ipfsAdd(template_ciphertext);
     const content_address = await ipfsAdd(content_ciphertext);
-
-    console.log('title_address', title_address.Hash);
-    console.log('template_address', template_address.Hash);
-    console.log('content_address', content_address.Hash);
-
-    // set the sharedSecret and sharedRecipient
-    setSharedSecret(encrypt(individual_secret, secret));
-    setSharedRecipient(encrypt(publicKey, secret));
 
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
@@ -125,7 +121,6 @@ const Editor: FC = () => {
       `${format_bigints(shared_recipient_bigints)}`,
     ];
 
-    console.log(inputs);
     const fee_value: number = parseFloat(fee) || 1.0;
 
     const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
@@ -139,10 +134,79 @@ const Editor: FC = () => {
       fee_microcredits,
     );
 
-    if (requestTransaction) {
-      // Returns a transaction Id, that can be used to check the status. Note this is not the on-chain transaction id
-      const txId = (await requestTransaction(aleoTransaction)) || '';
-      setTransactionId(txId);
+    try {
+      if (requestTransaction) {
+        // Returns a transaction Id, that can be used to check the status. Note this is not the on-chain transaction id
+        const txId = (await requestTransaction(aleoTransaction)) || '';
+        setTransactionId(txId);
+      }
+    } catch (e: any) {
+      console.log(aleoTransaction, 'Transaction Failed');
+    }
+  };
+
+  const handleCreateNewsletterIssue = async (event: ChangeEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!publicKey) throw new WalletNotConnectedError();
+
+    // Make immutable hash of the string values.
+    const title_address = await ipfsAdd(title_ciphertext);
+    const template_address = await ipfsAdd(template_ciphertext);
+    const content_address = await ipfsAdd(content_ciphertext);
+
+    const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
+    const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
+    const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
+    const group_secret_bigint = padArray([BigInt(secret)], 1);
+    const individual_secret_bigint = padArray([BigInt(individual_secret)], 1);
+    const shared_secret_bigints = padArray(splitStringToBigInts(shared_secret), 4);
+    const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 7);
+
+    // Desired format is a string of the form:
+    // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
+
+    const format_bigints = (bigints: bigint[]) => {
+      let result = '{ ';
+      for (let i = 0; i < bigints.length; i++) {
+        if (i == bigints.length - 1) result += `b${i}: ${bigints[i]}u128 `;
+        else result += `b${i}: ${bigints[i]}u128, `;
+      }
+      result += '}';
+      return result;
+    };
+
+    // The record here is an output from the Requesting Records above
+    const inputs = [
+      `${format_bigints(title_bigints)}`,
+      `${format_bigints(template_bigints)}`,
+      `${format_bigints(content_bigints)}`,
+      `${group_secret_bigint[0]}u128`,
+      `${individual_secret_bigint[0]}u128`,
+      `${format_bigints(shared_secret_bigints)}`,
+      `${format_bigints(shared_recipient_bigints)}`,
+    ];
+
+    const fee_value: number = parseFloat(fee) || 1.0;
+
+    const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
+
+    const aleoTransaction = Transaction.createTransaction(
+      publicKey,
+      WalletAdapterNetwork.Testnet,
+      NewsletterProgramId,
+      'main',
+      inputs,
+      fee_microcredits,
+    );
+
+    try {
+      if (requestTransaction) {
+        // Returns a transaction Id, that can be used to check the status. Note this is not the on-chain transaction id
+        const txId = (await requestTransaction(aleoTransaction)) || '';
+        setTransactionId(txId);
+      }
+    } catch (e: any) {
+      console.log(aleoTransaction, 'Transaction Failed');
     }
   };
 
@@ -150,6 +214,7 @@ const Editor: FC = () => {
     const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
     setStatus(status);
     if (status === 'Finalized') {
+      setStatus(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
     }
   };
@@ -191,7 +256,10 @@ const Editor: FC = () => {
             </label>
           )}
         </div>
-        <form className="App-body-form" onSubmit={handleSubmit}>
+        <form
+          className="App-body-form"
+          onSubmit={newsletter && newsletter.id ? handleCreateNewsletterIssue : handleCreateNewsletter}
+        >
           <MDEditor
             className="App-body-editor"
             height={'54vh'}
@@ -211,7 +279,7 @@ const Editor: FC = () => {
                   <div>{`Transaction status: ${status}`}</div>
                 </div>
               )}
-              <input type="submit" disabled={!publicKey} value="Submit" />
+              <input type="submit" disabled={!publicKey || !shared_secret || !shared_recipient} value="Submit" />
             </div>
           )}
         </form>

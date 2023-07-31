@@ -150,7 +150,6 @@ export async function ipfsAdd(data: string) {
         },
       })
       .then((response) => {
-        console.log('IPFS Response: ', response.data);
         return response.data;
       });
 
@@ -188,21 +187,15 @@ export const encrypt = (plaintext: string, secret: string): string => {
 
 export const decrypt = (aes_ciphertext: string, secret: string): string => {
   let plaintext = '';
-  console.log(typeof aes_ciphertext, typeof secret);
-  console.log(aes_ciphertext, secret);
   if (typeof aes_ciphertext === 'string' && typeof secret === 'string') {
     const bytes = CryptoJS.AES.decrypt(aes_ciphertext, secret);
-    console.log(bytes);
     plaintext = bytes.toString(CryptoJS.enc.Utf8);
-    console.log(plaintext);
   }
   return plaintext;
 };
 
 export const resolve = async (path: string) => {
-  console.log('Fetching from IPFS: ' + path); // IPFS Hash/Address
   const cipher_text = await axios.get(`https://ipfs.io/ipfs/${path}`).then((response) => {
-    console.log('IPFS Response: ' + response.data);
     return response.data;
   });
   return cipher_text;

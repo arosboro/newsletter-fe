@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Record } from '@/features/records/recordsSlice';
+import { fetchRecords, Record } from '@/features/records/recordsSlice';
 import { SubscriptionRecord } from '@/features/subscriptions/subscriptionsSlice';
 import { decode, decrypt, encrypt, initSecret, resolve } from '@/lib/util';
 import { setPublicKey } from '../accounts/accountsSlice';
@@ -26,19 +26,26 @@ export interface NewsletterRecord {
 interface ExampleDraft {
   title: string;
   template: string;
+  content: string;
 }
 
 export type NewsletterState = {
+  raw_records: { [key: string]: NewsletterRecord };
   list: { [key: string]: NewsletterRecord };
   encrypted: { [key: string]: NewsletterRecord };
   decrypted: { [key: string]: NewsletterRecord };
   newsletter: NewsletterRecord;
+  draft_record: NewsletterRecord;
+  draft_title: string;
+  draft_template: string;
+  draft_content: string;
   title: string;
   template: string;
   content: string;
   title_ciphertext: string;
   template_ciphertext: string;
   content_ciphertext: string;
+  draft_mode: boolean;
   template_mode: boolean;
   privacy_mode: boolean;
   public_key: string | null;
@@ -49,16 +56,22 @@ export type NewsletterState = {
 };
 
 const initialState: NewsletterState = {
+  raw_records: {},
   list: {},
   encrypted: {},
   decrypted: {},
   newsletter: {} as NewsletterRecord,
+  draft_record: {} as NewsletterRecord,
+  draft_title: '',
+  draft_template: '',
+  draft_content: '',
   title: '',
   template: '',
   content: '',
   title_ciphertext: '',
   template_ciphertext: '',
   content_ciphertext: '',
+  draft_mode: false,
   template_mode: true,
   privacy_mode: false,
   public_key: null,
@@ -68,7 +81,7 @@ const initialState: NewsletterState = {
   error: undefined,
 };
 
-const processNewsletterData = (record: NewsletterRecord) => {
+export const processNewsletterData = (record: NewsletterRecord) => {
   const data = {
     ...record.data,
     id: BigInt((record.data.id as string).slice(0, -13)).toString(),
@@ -170,10 +183,16 @@ const newslettersSlice = createSlice({
     },
     setNewsletter: (state, action: PayloadAction<NewsletterRecord>) => {
       state.newsletter = action.payload;
-      state.group_secret = action.payload.data.group_secret.replace(/u128.private/g, '');
-      state.title = action.payload.data.title as string;
-      state.template = action.payload.data.template as string;
-      state.content = action.payload.data.content as string;
+      if (state.draft_mode && state.draft_record.id === action.payload.id) {
+        state.title = state.draft_title;
+        state.template = state.draft_template;
+        state.content = state.draft_content;
+      } else {
+        state.title = state.newsletter.data.title as string;
+        state.template = state.newsletter.data.template as string;
+        state.content = state.newsletter.data.content as string;
+      }
+      state.group_secret = state.newsletter.data.group_secret.replace(/u128.private/g, '');
       state.title_ciphertext = encrypt(state.title, state.group_secret);
       state.template_ciphertext = encrypt(state.template, state.group_secret);
       state.content_ciphertext = encrypt(state.content, state.group_secret);
@@ -191,6 +210,13 @@ const newslettersSlice = createSlice({
     },
     setTitle: (state, action: PayloadAction<string>) => {
       if (!state.privacy_mode) {
+        if (state.newsletter && state.newsletter.id) {
+          state.draft_mode = true;
+          state.draft_record = state.raw_records[state.newsletter.id];
+          state.draft_title = action.payload;
+          state.draft_template = state.template;
+          state.draft_content = state.content;
+        }
         state.title = action.payload;
         if (state.group_secret === '') {
           state.group_secret = initSecret().toString();
@@ -200,6 +226,13 @@ const newslettersSlice = createSlice({
     },
     setTemplate: (state, action: PayloadAction<string>) => {
       if (!state.privacy_mode) {
+        if (state.newsletter && state.newsletter.id) {
+          state.draft_mode = true;
+          state.draft_record = state.raw_records[state.newsletter.id];
+          state.draft_title = state.title;
+          state.draft_template = action.payload;
+          state.draft_content = state.content;
+        }
         state.template = action.payload;
         if (state.group_secret === '') {
           state.group_secret = initSecret().toString();
@@ -209,6 +242,13 @@ const newslettersSlice = createSlice({
     },
     setContent: (state, action: PayloadAction<string>) => {
       if (!state.privacy_mode) {
+        if (state.newsletter && state.newsletter.id) {
+          state.draft_mode = true;
+          state.draft_record = state.raw_records[state.newsletter.id];
+          state.draft_title = state.title;
+          state.draft_template = state.template;
+          state.draft_content = action.payload;
+        }
         state.content = action.payload;
         if (state.group_secret === '') {
           state.group_secret = initSecret().toString();
@@ -219,6 +259,15 @@ const newslettersSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchRecords.fulfilled, (state, action: PayloadAction<Record[]>) => {
+        const newRecords: { [key: string]: NewsletterRecord } = {};
+        action.payload.forEach((record: Record) => {
+          if (isNewsletterRecord(record)) {
+            newRecords[record.id] = record as NewsletterRecord;
+          }
+        });
+        state.raw_records = newRecords;
+      })
       .addCase(resolveNewsletterRecords.pending, (state) => {
         state.status = 'loading';
       })
@@ -265,12 +314,13 @@ const newslettersSlice = createSlice({
         const example = action.payload;
         state.title = example.title;
         state.template = example.template;
-        state.content = example.template;
+        state.content = example.content;
         state.group_secret = initSecret().toString();
         state.individual_secret = initSecret().toString();
         state.title_ciphertext = encrypt(state.title, state.group_secret);
         state.template_ciphertext = encrypt(state.template, state.group_secret);
         state.content_ciphertext = encrypt(state.template, state.group_secret);
+        state.status = 'idle';
       })
       .addCase(fetchExample.rejected, (state, action) => {
         state.status = 'idle';
@@ -283,6 +333,9 @@ export const { toggleTemplateMode, togglePrivacyMode, setNewsletter, initDraft, 
   newslettersSlice.actions;
 
 const selectNewsletterList = (state: { newsletters: NewsletterState }) => state.newsletters.list;
+
+export const selectRawNewsletter = (state: { newsletters: NewsletterState }): NewsletterRecord =>
+  state.newsletters.raw_records[state.newsletters.newsletter.id];
 
 export const selectIsLoading = (state: { newsletters: NewsletterState }): boolean =>
   state.newsletters.status === 'loading';

@@ -62,7 +62,6 @@ const Reader: FC = () => {
 
     if (!publicKey) throw new WalletNotConnectedError();
     if (!newsletter) throw new Error('No newsletter found');
-    console.log(newsletter);
 
     // The newsletter here is an output from the Requesting Records above
     // newsletter: Newsletter, secret: u128, shared_secret: Bytes64, shared_recipient: Bytes112
@@ -94,7 +93,6 @@ const Reader: FC = () => {
       `${format_bigints(shared_recipient_bigints)}`,
     ];
 
-    console.log(inputs);
     const fee_value: number = parseFloat(fee) || 1.0;
 
     const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough

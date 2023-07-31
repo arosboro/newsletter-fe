@@ -22,10 +22,8 @@ export const Subscribers = ({ programId, useWallet, parent_status, record }: Pro
         (publicKey && requestRecords && typeof parent_status === 'undefined') ||
         (publicKey && requestRecords && parent_status === 'Finalized')
       ) {
-        console.log(programId);
         const res = await requestRecords(programId);
         setRecords(res.filter((record: SubscriptionRecord) => !record.spent && Object.keys(record.data).length === 5));
-        console.log(records, 'SubscriptionRecord[]');
         for (let i = 0; i < records.length; i++) {
           const mappings_copy = mappings;
           const shared_secret: SharedSecret = await resolve_addr_from_mapping(records[i].data.member_secret_idx);
@@ -41,7 +39,6 @@ export const Subscribers = ({ programId, useWallet, parent_status, record }: Pro
   const resolve_addr_from_mapping = async (index: string): Promise<SharedSecret> => {
     const key = 'member_secrets';
     const secret = await getMapping(TESTNET3_API_URL, programId, index, key);
-    console.log(secret);
     return secret;
   };
 

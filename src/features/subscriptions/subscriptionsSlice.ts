@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Record } from '@/features/records/recordsSlice';
-import { isNewsletterRecord, NewsletterRecord } from '@/features/newsletters/newslettersSlice';
+import { isNewsletterRecord, NewsletterRecord, processNewsletterData } from '@/features/newsletters/newslettersSlice';
 import { getMapping } from '@/aleo/rpc';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { decode, decrypt, resolve } from '@/lib/util';
@@ -30,13 +30,29 @@ export interface SharedSecretMapping {
   secret: SharedSecret;
 }
 
+export interface SubscriberList {
+  [key: string]: SharedSecretMapping[];
+}
+
 export type SubscriptionState = {
   list: { [key: string]: SharedSecretMapping };
+  newsletter_list: SubscriberList;
   status: 'uninitialized' | 'loading' | 'idle';
   error: string | undefined;
 };
 
-const initialState: SubscriptionState = { list: {}, status: 'uninitialized', error: undefined };
+const initialState: SubscriptionState = { list: {}, newsletter_list: {}, status: 'uninitialized', error: undefined };
+
+export const processSubscriptionData = (record: SubscriptionRecord) => {
+  const data = {
+    ...record.data,
+    id: BigInt((record.data.id as string).slice(0, -13)).toString(),
+    op: (record.data.op as string).slice(0, -8),
+    member_sequence: BigInt((record.data.member_sequence as string).slice(0, -12)).toString(),
+    member_secret_idx: BigInt(record.data.member_secret_idx.slice(0, -13)).toString(),
+  };
+  return { ...record, data: data };
+};
 
 export const isSubscriptionRecord = (
   record: NewsletterRecord | SubscriptionRecord | Record,
@@ -46,18 +62,21 @@ export const isSubscriptionRecord = (
 
 export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupRecords', async (records: Record[]) => {
   const newsletter_records = records.filter((record) => isNewsletterRecord(record)) as NewsletterRecord[];
+  const cleaned_newsletter_records = newsletter_records.map((record) => {
+    return processNewsletterData(record);
+  });
   const subscription_records = records.filter((record) => isSubscriptionRecord(record)) as SubscriptionRecord[];
   const shared_secrets: SharedSecretMapping[] = [];
   for (let i = 0; i < subscription_records.length; i++) {
-    const subscription: SubscriptionRecord = subscription_records[i];
-    const member_secret_idx = subscription.data.member_secret_idx.slice(0, -8);
+    const subscription: SubscriptionRecord = processSubscriptionData(subscription_records[i]);
+    const member_secret_idx = `${subscription.data.member_secret_idx}field`;
     const member_secret: SharedSecret = await getMapping(
       'https://vm.aleo.org/api',
       NewsletterProgramId,
       'member_secrets',
       member_secret_idx,
     );
-    const filtered_newsletters: NewsletterRecord[] = newsletter_records.filter(
+    const filtered_newsletters: NewsletterRecord[] = cleaned_newsletter_records.filter(
       (record) => subscription.data.id === record.data.id,
     );
     const unique_newsletters: NewsletterRecord[] = [];
@@ -86,8 +105,6 @@ export const decryptSubscriptionMappings = createAsyncThunk(
       const mapping: SharedSecretMapping = mappings[i];
       const shared_secret = mapping.secret.shared_secret as string;
       const recipient = mapping.secret.recipient as string;
-      console.log(shared_secret, 'shared_secret');
-      console.log(recipient, 'recipient');
       const group_secret = mapping.newsletter.data.group_secret.slice(0, -12);
       const title = await resolve(decode(mapping.newsletter.data.title));
       const template = await resolve(decode(mapping.newsletter.data.template));
@@ -102,10 +119,6 @@ export const decryptSubscriptionMappings = createAsyncThunk(
           content: decrypt(content, group_secret),
         },
       };
-      console.log(shared_secret, group_secret);
-      console.log(recipient, group_secret);
-      console.log(decrypt(shared_secret, group_secret), '1 boyah');
-      console.log(decrypt(recipient, group_secret), '2 boyahs');
       decrypted_mappings.push({
         ...mapping,
         newsletter: newsletter_decrypted,
@@ -131,6 +144,21 @@ const subscriptionsSlice = createSlice({
           newRecords[map.subscription.id] = map;
         });
         state.list = newRecords;
+        const keys = Object.keys(state.list);
+        state.newsletter_list = {};
+        for (let i = 0; i < keys.length; i++) {
+          const mapping = state.list[keys[i]];
+          const newsletter_id = mapping.newsletter.data.id;
+          if (typeof state.newsletter_list[newsletter_id] === 'undefined') {
+            state.newsletter_list[newsletter_id] = [];
+          }
+          mapping.secret.shared_secret = decrypt(
+            mapping.secret.shared_secret as string,
+            mapping.newsletter.data.group_secret,
+          );
+          mapping.secret.recipient = decrypt(mapping.secret.recipient as string, mapping.newsletter.data.group_secret);
+          state.newsletter_list[newsletter_id].push(mapping);
+        }
         state.status = 'idle';
       })
       .addCase(lookupSubscriptionRecords.rejected, (state, action) => {
@@ -145,5 +173,8 @@ const selectSubscriptionsList = (state: { subscriptions: SubscriptionState }) =>
 export const selectUnspentSubscriptions = createSelector(selectSubscriptionsList, (subscription_list) => {
   return Object.values(subscription_list).filter((record) => !record.newsletter.spent);
 });
+
+export const selectNewsletterSubscribers = (state: { subscriptions: SubscriptionState }) =>
+  state.subscriptions.newsletter_list;
 
 export default subscriptionsSlice.reducer;
