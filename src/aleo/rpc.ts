@@ -3,9 +3,7 @@
 // All credit goes to the original author.  NFT Functionality removed for this project, replaced by Newsletter functionality.
 
 import { JSONRPCClient } from 'json-rpc-2.0';
-// import { NewsletterProgramId } from './newsletter-program';
-// import { bigIntToString, joinBigIntsToString, parseStringToBigIntArray } from '../lib/util';
-// import assert from 'assert';
+import axios from 'axios';
 
 export const TESTNET3_API_URL = import.meta.env.VITE_RPC_URL as string;
 
@@ -67,13 +65,11 @@ export async function getMapping(
   mappingName: string,
   mappingKey: string,
 ): Promise<any> {
-  const mappingUrl = `${apiUrl}/testnet3/program/${programId}/mappings`;
-  const response = await fetch(`${mappingUrl}/${mappingName}/${mappingKey}`);
-  if (!response.ok) {
-    throw new Error('Mapping not found');
-  }
-  const mapping = await response.json();
-  return mapping;
+  const mappingUrl = `${apiUrl}/testnet3/program/${programId}/mapping`;
+  const response = await axios.get(`${mappingUrl}/${mappingName}/${mappingKey}`);
+  const mapping: string = response.data.replace(/(\d+)u128/g, '"$1u128"').replace(/(\w+):/g, '"$1":');
+
+  return JSON.parse(mapping);
 }
 
 export const getClient = (apiUrl: string) => {

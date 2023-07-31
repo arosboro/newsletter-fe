@@ -150,7 +150,6 @@ export async function ipfsAdd(data: string) {
         },
       })
       .then((response) => {
-        console.log('IPFS Response: ', response.data);
         return response.data;
       });
 
@@ -162,83 +161,42 @@ export async function ipfsAdd(data: string) {
 }
 
 export const decode = (bytes: string[] | string): string => {
+  if (typeof bytes === 'string') {
+    bytes = [bytes];
+  }
   const chunkBuffer = Object.values(bytes).map((chunk) => {
-    return BigInt(chunk.slice(0, -12));
+    return BigInt(chunk.replace(/(u\d{1,3}|.private|.public)/g, ''));
   });
   const chunk_decoded = joinBigIntsToString(chunkBuffer);
   return chunk_decoded;
 };
 
+export const initSecret = (): bigint => {
+  // Calcuate a 64-bit random integer and subtract 4 bytes
+  const seed = BigInt(Math.floor(Math.random() * 2 ** 64)) - BigInt(4);
+  return seed;
+};
+
+export const encrypt = (plaintext: string, secret: string): string => {
+  let ciphertext = '';
+  if (typeof plaintext === 'string' && typeof secret === 'string') {
+    ciphertext = CryptoJS.AES.encrypt(plaintext, secret).toString();
+  }
+  return ciphertext;
+};
+
 export const decrypt = (aes_ciphertext: string, secret: string): string => {
   let plaintext = '';
   if (typeof aes_ciphertext === 'string' && typeof secret === 'string') {
-    plaintext = CryptoJS.AES.decrypt(aes_ciphertext, secret).toString(CryptoJS.enc.Utf8);
+    const bytes = CryptoJS.AES.decrypt(aes_ciphertext, secret);
+    plaintext = bytes.toString(CryptoJS.enc.Utf8);
   }
   return plaintext;
 };
 
-export const isNewsletterRecord = (record: NewsletterRecord | SubscriptionRecord): record is NewsletterRecord => {
-  return (record as NewsletterRecord).data.base !== undefined;
-};
-
-export const isSubscriptionRecord = (record: NewsletterRecord | SubscriptionRecord): record is SubscriptionRecord => {
-  return (record as SubscriptionRecord).data.member_secret_idx !== undefined;
-};
-
-export const resolve_ipfs = async (
-  records: NewsletterRecord[],
-  privacy: boolean,
-  setIsLoading: (isLoading: boolean) => void,
-  setRecordsDecrypted: (recordsDecoded: NewsletterRecord[]) => void,
-  old_record: NewsletterRecord | undefined,
-  setRecord: (record: NewsletterRecord) => void,
-) => {
-  const resolve = async (path: string) => {
-    console.log('Fetching from IPFS: ' + path); // IPFS Hash/Address
-    const cipher_text = await axios.get(`https://ipfs.io/ipfs/${path}`).then((response) => {
-      console.log('IPFS Response: ' + response.data);
-      return response.data;
-    });
-    return cipher_text;
-  };
-  // process each record of records through resolve into recordsDecoded with resolve async function.
-  const data: NewsletterRecord[] = [];
-  for (let i = 0; i < records.length; i++) {
-    const record: NewsletterRecord = records[i];
-    const decoded_title: string = await resolve(decode(record.data.title));
-    const decoded_template = await resolve(decode(record.data.template));
-    const decoded_content = await resolve(decode(record.data.content));
-    const decoded_group_secret = record.data.group_secret.slice(0, -12);
-    const decoded_data = {
-      ...record.data,
-      title: decoded_title,
-      template: decoded_template,
-      content: decoded_content,
-      group_secret: decoded_group_secret,
-    };
-    const decrypted_title = decrypt(decoded_title, decoded_group_secret);
-    const decrypted_template = decrypt(decoded_template, decoded_group_secret);
-    const decrypted_content = decrypt(decoded_content, decoded_group_secret);
-    const decrypted_data = {
-      ...record.data,
-      title: decrypted_title,
-      template: decrypted_template,
-      content: decrypted_content,
-      group_secret: decoded_group_secret,
-    };
-    const record_decrypted = {
-      ...record,
-      data: privacy ? decoded_data : decrypted_data,
-    };
-    console.log(record_decrypted, 'record_decrypted');
-    data.push(record_decrypted);
-  }
-  console.log(data, 'ipfs data');
-  setRecordsDecrypted(data);
-  if (typeof old_record !== 'undefined') {
-    const record_updated: NewsletterRecord | undefined = data.find((record) => record.id === old_record.id);
-    if (typeof record_updated !== 'undefined') setRecord(record_updated);
-  }
-
-  setIsLoading(false);
+export const resolve = async (path: string) => {
+  const cipher_text = await axios.get(`https://ipfs.io/ipfs/${path}`).then((response) => {
+    return response.data;
+  });
+  return cipher_text;
 };

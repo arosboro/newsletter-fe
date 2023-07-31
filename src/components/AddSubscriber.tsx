@@ -1,19 +1,19 @@
 import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@demox-labs/aleo-wallet-adapter-base';
-import { WalletContextState } from '@demox-labs/aleo-wallet-adapter-react';
+import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import React, { ChangeEvent, useEffect } from 'react';
 import Toggle from 'react-toggle';
-import { NewsletterRecord } from '@/lib/util';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
+import { NewsletterProgramId } from '@/aleo/newsletter-program';
+import { AppDispatch } from '@/app/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectRawNewsletter } from '@/features/newsletters/newslettersSlice';
+import { fetchRecords } from '@/features/records/recordsSlice';
 
-interface Props {
-  programId: string;
-  useWallet: () => WalletContextState;
-  setParentStatus: (value: React.SetStateAction<string | undefined>) => void;
-  record: NewsletterRecord | undefined;
-}
+export const AddSubscriber = () => {
+  const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();
 
-export const AddSubscriber = ({ programId, useWallet, setParentStatus, record }: Props) => {
-  const { wallet, publicKey, requestTransaction } = useWallet();
+  const record = useSelector(selectRawNewsletter);
+  const dispatch = useDispatch<AppDispatch>();
 
   const [invite_mode, setIsInviteMode] = React.useState<boolean>(false);
   const [address, setAddress] = React.useState<string>('');
@@ -41,12 +41,10 @@ export const AddSubscriber = ({ programId, useWallet, setParentStatus, record }:
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();
     if (!record) throw new Error('No record found');
-    console.log(record);
 
     // The record here is an output from the Requesting Records above
     const inputs = [record, address];
 
-    console.log(inputs);
     const fee_value: number = parseFloat(fee) || 1.0;
 
     const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
@@ -54,7 +52,7 @@ export const AddSubscriber = ({ programId, useWallet, setParentStatus, record }:
     const aleoTransaction = Transaction.createTransaction(
       publicKey,
       WalletAdapterNetwork.Testnet,
-      programId,
+      NewsletterProgramId,
       'invite',
       inputs,
       fee_microcredits,
@@ -62,17 +60,22 @@ export const AddSubscriber = ({ programId, useWallet, setParentStatus, record }:
 
     if (requestTransaction) {
       // Returns a transaction Id, that can be used to check the status. Note this is not the on-chain transaction id
-      const txId = (await requestTransaction(aleoTransaction)) || '';
-      setTransactionId(txId);
+      try {
+        const txId = (await requestTransaction(aleoTransaction)) || '';
+        setTransactionId(txId);
+      } catch (e) {
+        console.log('Transaction failed', aleoTransaction);
+      }
     }
   };
 
   const getTransactionStatus = async (txId: string) => {
     const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
-    if (status === 'Finalized') {
-      setParentStatus(status);
-    }
     setStatus(status);
+    if (status === 'Finalized') {
+      setStatus(undefined);
+      dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
+    }
   };
 
   return (

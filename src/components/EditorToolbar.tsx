@@ -1,109 +1,51 @@
-import React, { Dispatch, SetStateAction, useEffect } from 'react';
-import { resolve_ipfs, NewsletterRecord, isNewsletterRecord, SubscriptionRecord } from '@/lib/util';
-import { WalletContextState } from '@demox-labs/aleo-wallet-adapter-react';
+import React, { FC } from 'react';
+import {
+  NewsletterRecord,
+  selectIsLoading,
+  selectUnspentNewsletters,
+  selectNewsletter,
+  setNewsletter,
+  initDraft,
+  fetchExample,
+} from '@/features/newsletters/newslettersSlice';
 import { AddSubscriber } from '@/components/AddSubscriber';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch } from '@/app/store';
+import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
+import {
+  SharedSecretMapping,
+  SubscriberList,
+  selectNewsletterSubscribers,
+} from '@/features/subscriptions/subscriptionsSlice';
 
-interface Props {
-  programId: string;
-  useWallet: () => WalletContextState;
-  privacy: boolean;
-  record: NewsletterRecord | undefined;
-  setRecord: Dispatch<SetStateAction<NewsletterRecord | undefined>>;
-}
-
-const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Props) => {
-  const { publicKey, requestRecords } = useWallet();
-  const initRecord = {
-    id: '',
-    owner: '',
-    program_id: '',
-    data: {
-      id: '',
-      op: '',
-      member_sequence: '',
-      base: '',
-      revision: '',
-      template: '',
-      title: '',
-      content: '',
-      group_secret: '',
-      individual_secret: '',
-    },
-    spent: false,
-  };
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [records, setRecords] = React.useState<NewsletterRecord[]>([]);
-  const [recordsDecrypted, setRecordsDecrypted] = React.useState<NewsletterRecord[]>([]);
-  const [status, setStatus] = React.useState<string | undefined>();
-
-  useEffect(() => {
-    const fetch = async (programId: string) => {
-      if (
-        (publicKey && requestRecords && typeof status === 'undefined') ||
-        (publicKey && requestRecords && status === 'Finalized')
-      ) {
-        console.log(programId);
-        const res = await requestRecords(programId);
-        setRecords(
-          res.filter(
-            (record: NewsletterRecord | SubscriptionRecord) =>
-              !record.spent && isNewsletterRecord(record) && record.data.op.slice(0, -8) == publicKey,
-          ),
-        );
-        setIsLoading(true);
-        console.log(records, 'records');
-        if (status === 'Finalized') {
-          setStatus(undefined);
-        }
-      }
-    };
-    fetch(programId);
-  }, [publicKey, programId, status]);
-
-  useEffect(() => {
-    if (records && records.length >= 1)
-      resolve_ipfs(records, privacy, setIsLoading, setRecordsDecrypted, record, setRecord);
-  }, [records, privacy]);
+const EditorToolbar: FC = () => {
+  const { connected, publicKey } = useWallet();
+  const isLoading: boolean = useSelector(selectIsLoading);
+  const newsletters: NewsletterRecord[] = useSelector(selectUnspentNewsletters);
+  const newsletter: NewsletterRecord = useSelector(selectNewsletter);
+  const subscribers: SubscriberList = useSelector(selectNewsletterSubscribers);
+  const dispatch = useDispatch<AppDispatch>();
 
   return (
     <aside className="App-nav">
-      <button
-        className="App-nav-button"
-        onClick={(e) => {
-          e.preventDefault();
-          setRecord(initRecord);
-        }}
-      >
+      <button className="App-nav-button" onClick={() => dispatch(initDraft())}>
         New
       </button>
       &nbsp;
-      <button
-        className="App-nav-button"
-        onClick={(e) => {
-          e.preventDefault();
-          setRecord(undefined);
-        }}
-      >
+      <button className="App-nav-button" onClick={() => dispatch(fetchExample())}>
         Example
       </button>
       <hr />
       <input className="App-nav-input" placeholder="Filter" />
       <hr />
-      {publicKey && !isLoading && (
+      {connected && !isLoading && (
         <>
           <h4>Newsletters</h4>
           <ul className="App-nav-list">
-            {recordsDecrypted.map((value: NewsletterRecord, index: number) => (
-              <li className="{record.idApp-nav-list-item" key={index}>
-                <a
-                  href="/#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setRecord(value);
-                  }}
-                  className="App-nav-list-item-link"
-                >
-                  {(value && record && value.id == record.id && value.data && value.data.title && (
+            {newsletters.map((value: NewsletterRecord, index: number) => (
+              <li className="{App-nav-list-item" key={index}>
+                <a href="/#" onClick={() => dispatch(setNewsletter(value))} className="App-nav-list-item-link">
+                  {(value && newsletter && value.id == newsletter.id && value.data && value.data.title && (
                     <i>{value.data.title}</i>
                   )) ||
                     (value && value.data && value.data.title && value.data.title)}
@@ -111,20 +53,22 @@ const EditorToolbar = ({ programId, useWallet, privacy, record, setRecord }: Pro
               </li>
             ))}
           </ul>
-          {record && record.id && (
+          {newsletter && newsletter.id && newsletter.data.op === publicKey && (
             <>
               <hr />
               <h4>Subscribers</h4>
-              <AddSubscriber
-                programId={programId}
-                useWallet={useWallet}
-                setParentStatus={setStatus}
-                record={
-                  records.filter((rec) => {
-                    return (rec.id = record.id);
-                  })[0]
-                }
-              />
+              <AddSubscriber />
+              <ul className="App-nav-list">
+                {subscribers &&
+                  subscribers[newsletter.data.id] &&
+                  subscribers[newsletter.data.id].map((value: SharedSecretMapping, index: number) => (
+                    <li className="{App-nav-list-item" key={index}>
+                      <a href="/#" className="App-nav-list-item-link">
+                        {value.subscription.data.member_sequence} - {value.secret.recipient}
+                      </a>
+                    </li>
+                  ))}
+              </ul>
             </>
           )}
         </>
