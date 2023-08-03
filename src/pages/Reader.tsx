@@ -1,6 +1,5 @@
 import React, { ChangeEvent, FC, useEffect } from 'react';
 import MDEditor from '@uiw/react-md-editor';
-import CryptoJS from 'crypto-js';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
 import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
 import './Reader.css';
@@ -8,24 +7,27 @@ import ReaderToolbar from '@/components/ReaderToolbar';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import Toggle from 'react-toggle';
-import { padArray, splitStringToBigInts } from '@/lib/util';
+import { encrypt, format_bigints, padArray, splitStringToBigInts } from '@/lib/util';
 import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@demox-labs/aleo-wallet-adapter-base';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
 import {
   selectContent,
+  selectGroupSecret,
   selectNewsletter,
   selectPrivacyMode,
   selectTitle,
   togglePrivacyMode,
 } from '@/features/newsletters/newslettersSlice';
+import { fetchRecords } from '@/features/records/recordsSlice';
 
 const Reader: FC = () => {
-  const { wallet, publicKey, requestTransaction } = useWallet();
+  const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();
   const newsletter = useSelector(selectNewsletter);
   const title = useSelector(selectTitle);
   const content = useSelector(selectContent);
+  const group_secret = useSelector(selectGroupSecret);
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
   const dispatch = useDispatch<AppDispatch>();
 
@@ -66,24 +68,8 @@ const Reader: FC = () => {
     // The newsletter here is an output from the Requesting Records above
     // newsletter: Newsletter, secret: u128, shared_secret: Bytes64, shared_recipient: Bytes112
     const secret_bigint = padArray([BigInt(secret)], 1);
-    const shared_secret_bigints = padArray(
-      splitStringToBigInts(CryptoJS.AES.encrypt(secret, newsletter.data.group_secret.slice(0, -8)).toString()),
-      4,
-    );
-    const shared_recipient_bigints = padArray(
-      splitStringToBigInts(CryptoJS.AES.encrypt(publicKey, newsletter.data.group_secret.slice(0, -8)).toString()),
-      7,
-    );
-
-    const format_bigints = (bigints: bigint[]) => {
-      let result = '{ ';
-      for (let i = 0; i < bigints.length; i++) {
-        if (i == bigints.length - 1) result += `b${i}: ${bigints[i]}u128 `;
-        else result += `b${i}: ${bigints[i]}u128, `;
-      }
-      result += '}';
-      return result;
-    };
+    const shared_secret_bigints = padArray(splitStringToBigInts(encrypt(secret, group_secret)), 4);
+    const shared_recipient_bigints = padArray(splitStringToBigInts(encrypt(publicKey, group_secret)), 7);
 
     // The newsletter here is an output from the Requesting Records above
     const inputs = [
@@ -106,16 +92,24 @@ const Reader: FC = () => {
       fee_microcredits,
     );
 
-    if (requestTransaction) {
-      // Returns a transaction Id, that can be used to check the status. Note this is not the on-chain transaction id
-      const txId = (await requestTransaction(aleoTransaction)) || '';
-      setTransactionId(txId);
+    try {
+      if (requestTransaction) {
+        // Returns a transaction Id, that can be used to check the status. Note this is not the on-chain transaction id
+        const txId = (await requestTransaction(aleoTransaction)) || '';
+        setTransactionId(txId);
+      }
+    } catch (e: any) {
+      console.log(aleoTransaction, 'Transaction Failed');
     }
   };
 
   const getTransactionStatus = async (txId: string) => {
     const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
     setStatus(status);
+    if (status === 'Finalized') {
+      setStatus(undefined);
+      dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
+    }
   };
 
   return (

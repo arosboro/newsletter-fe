@@ -87,8 +87,8 @@ export const processNewsletterData = (record: NewsletterRecord) => {
     id: BigInt((record.data.id as string).slice(0, -13)).toString(),
     op: (record.data.op as string).slice(0, -8),
     member_sequence: BigInt((record.data.member_sequence as string).slice(0, -12)).toString(),
-    base: Boolean((record.data.base as string).slice(0, -8)),
-    revision: Boolean((record.data.revision as string).slice(0, -8)),
+    base: (record.data.base as string).slice(0, -8) === 'true',
+    revision: (record.data.revision as string).slice(0, -8) === 'true',
     group_secret: BigInt((record.data.group_secret as string).slice(0, -12)).toString(),
     individual_secret: BigInt((record.data.individual_secret as string).slice(0, -12)).toString(),
   };

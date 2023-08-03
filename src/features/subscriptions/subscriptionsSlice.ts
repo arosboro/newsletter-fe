@@ -76,6 +76,7 @@ export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupR
       'member_secrets',
       member_secret_idx,
     );
+    console.log(member_secret, member_secret_idx, 'member secret');
     const filtered_newsletters: NewsletterRecord[] = cleaned_newsletter_records.filter(
       (record) => subscription.data.id === record.data.id,
     );
@@ -106,26 +107,36 @@ export const decryptSubscriptionMappings = createAsyncThunk(
       const shared_secret = mapping.secret.shared_secret as string;
       const recipient = mapping.secret.recipient as string;
       const group_secret = mapping.newsletter.data.group_secret.slice(0, -12);
-      const title = await resolve(decode(mapping.newsletter.data.title));
-      const template = await resolve(decode(mapping.newsletter.data.template));
-      const content = await resolve(decode(mapping.newsletter.data.content));
-      const newsletter_decrypted: NewsletterRecord = {
-        ...mapping.newsletter,
-        data: {
-          ...mapping.newsletter.data,
-          group_secret: group_secret,
-          title: decrypt(title, group_secret),
-          template: decrypt(template, group_secret),
-          content: decrypt(content, group_secret),
-        },
-      };
-      decrypted_mappings.push({
-        ...mapping,
-        newsletter: newsletter_decrypted,
-        secret: { shared_secret: decrypt(shared_secret, group_secret), recipient: decrypt(recipient, group_secret) },
-      } as SharedSecretMapping);
+      try {
+        const title = await resolve(decode(mapping.newsletter.data.title));
+        const template = await resolve(decode(mapping.newsletter.data.template));
+        const content = await resolve(decode(mapping.newsletter.data.content));
+        console.log(title, template, content, 'decoded');
+        const newsletter_decrypted = {
+          ...mapping.newsletter,
+          data: {
+            ...mapping.newsletter.data,
+            group_secret: group_secret,
+            title: decrypt(title, group_secret),
+            template: decrypt(template, group_secret),
+            content: decrypt(content, group_secret),
+          },
+        };
+        console.log(newsletter_decrypted, 'newsletter decrypted');
+        const shared_secret_decoded: SharedSecret = {
+          shared_secret: decrypt(shared_secret, group_secret),
+          recipient: decrypt(recipient, group_secret),
+        };
+        decrypted_mappings.push({
+          ...mapping,
+          newsletter: newsletter_decrypted,
+          secret: shared_secret_decoded,
+        } as SharedSecretMapping);
+        return decrypted_mappings;
+      } catch (e) {
+        console.log(e);
+      }
     }
-    return decrypted_mappings;
   },
 );
 

@@ -8,7 +8,7 @@ import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@dem
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
-import { padArray, splitStringToBigInts, ipfsAdd, encrypt } from '@/lib/util';
+import { padArray, splitStringToBigInts, ipfsAdd, encrypt, ipfsRm, format_bigints } from '@/lib/util';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
 import {
@@ -165,16 +165,6 @@ const Editor: FC = () => {
     // Desired format is a string of the form:
     // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
 
-    const format_bigints = (bigints: bigint[]) => {
-      let result = '{ ';
-      for (let i = 0; i < bigints.length; i++) {
-        if (i == bigints.length - 1) result += `b${i}: ${bigints[i]}u128 `;
-        else result += `b${i}: ${bigints[i]}u128, `;
-      }
-      result += '}';
-      return result;
-    };
-
     // The record here is an output from the Requesting Records above
     const inputs = [
       `${format_bigints(title_bigints)}`,
@@ -189,6 +179,15 @@ const Editor: FC = () => {
     const fee_value: number = parseFloat(fee) || 1.0;
 
     const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
+
+    const test1 = encrypt('13509774859604697084', '11708986043611107324');
+    console.log(test1, 'shared_secret');
+    const test2 = encrypt('aleo1rzhda63qd45uwg46qtf4ahv5zpuap5s9u8qdtlks7239hghckg8qhvqcgu', '11708986043611107324');
+    console.log(test2, 'shared_recipient');
+    const test1_bigints = padArray(splitStringToBigInts(test1), 4);
+    const test2_bigints = padArray(splitStringToBigInts(test2), 7);
+    console.log(`${format_bigints(test1_bigints)}`);
+    console.log(`${format_bigints(test2_bigints)}`);
 
     const aleoTransaction = Transaction.createTransaction(
       publicKey,
@@ -207,6 +206,9 @@ const Editor: FC = () => {
       }
     } catch (e: any) {
       console.log(aleoTransaction, 'Transaction Failed');
+      ipfsRm(title_address);
+      ipfsRm(template_address);
+      ipfsRm(content_address);
     }
   };
 

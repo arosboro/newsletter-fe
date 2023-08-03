@@ -4,6 +4,7 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import CryptoJS from 'crypto-js';
+import nacl from 'js-nacl';
 
 export interface NewsletterRecord {
   id: string;
@@ -153,6 +154,52 @@ export async function ipfsAdd(data: string) {
         return response.data;
       });
 
+    // Add a pin
+    await axios
+      .post(`${import.meta.env.VITE_IPFS_API_ENDPOINT}/pin/add?arg=${response.Hash}`, {
+        headers: {
+          authorization,
+        },
+      })
+      .then((response) => {
+        return response.data;
+      });
+
+    return response;
+  } catch (error) {
+    console.error('IPFS error', error);
+    return undefined;
+  }
+}
+
+export const format_bigints = (bigints: bigint[]) => {
+  const int_list = bigints.map((bigint) => bigint.toString() + 'u128');
+  let int_str = '{';
+  for (let i = 0; i < int_list.length; i++) {
+    int_str += `b${+i}: ${int_list[i]}`;
+    if (i < int_list.length - 1) {
+      int_str += ', ';
+    }
+  }
+  int_str += '}';
+  return int_str;
+};
+
+export async function ipfsRm(hash: string) {
+  try {
+    const authorization =
+      'Basic ' + btoa(`${import.meta.env.VITE_INFURA_IPFS_API_KEY}:${import.meta.env.VITE_INFURA_IPFS_API_SECRET}`);
+
+    const response = await axios
+      .post(`${import.meta.env.VITE_IPFS_API_ENDPOINT}/rm?arg=${hash}`, {
+        headers: {
+          authorization,
+        },
+      })
+      .then((response) => {
+        return response.data;
+      });
+
     return response;
   } catch (error) {
     console.error('IPFS error', error);
@@ -192,6 +239,48 @@ export const decrypt = (aes_ciphertext: string, secret: string): string => {
     plaintext = bytes.toString(CryptoJS.enc.Utf8);
   }
   return plaintext;
+};
+
+export const generateGroupSymmetricKey = (): Uint8Array => {
+  return nacl.randomBytes(nacl.secretbox.keyLength);
+};
+
+export const encryptGroupMessage = (
+  message: string,
+  groupSymmetricKey: Uint8Array,
+): { ciphertext: Uint8Array; nonce: Uint8Array } => {
+  const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
+  const ciphertext = nacl.secretbox(message, nonce, groupSymmetricKey);
+  return { ciphertext, nonce };
+};
+
+export const decryptGroupMessage = (
+  ciphertext: Uint8Array,
+  nonce: Uint8Array,
+  groupSymmetricKey: Uint8Array,
+): string | null => {
+  const plaintext = nacl.secretbox.open(ciphertext, nonce, groupSymmetricKey);
+  return plaintext ? nacl.util.encodeUTF8(plaintext) : null;
+};
+
+export const encryptGroupSymmetricKey = (
+  groupSymmetricKey: Uint8Array,
+  recipientPublicKey: Uint8Array,
+  senderPrivateKey: Uint8Array,
+) => {
+  const nonce = nacl.randomBytes(nacl.box.nonceLength);
+  const encryptedKey = nacl.box(groupSymmetricKey, nonce, recipientPublicKey, senderPrivateKey);
+  return { encryptedKey, nonce };
+};
+
+export const decryptGroupSymmetricKey = (
+  encryptedKey: Uint8Array,
+  senderPublicKey: Uint8Array,
+  privateKey: Uint8Array,
+  nonce: Uint8Array,
+): Uint8Array | null => {
+  const decryptedKey = nacl.box.open(encryptedKey, nonce, senderPublicKey, privateKey);
+  return decryptedKey ? decryptedKey : null;
 };
 
 export const resolve = async (path: string) => {
