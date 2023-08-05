@@ -4,7 +4,13 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import CryptoJS from 'crypto-js';
-import nacl from 'js-nacl';
+import nacl_factory from 'js-nacl';
+
+let nacl: nacl_factory.Nacl;
+
+nacl_factory.instantiate((instance: nacl_factory.Nacl) => {
+  nacl = instance;
+});
 
 export interface NewsletterRecord {
   id: string;
@@ -47,6 +53,11 @@ export interface SharedSecret {
 export interface SharedSecretMapping {
   key: string;
   value: SharedSecret;
+}
+
+export interface HexCipher {
+  ciphertext: string;
+  nonce: string;
 }
 
 export function safeParseInt(value: string): number {
@@ -241,46 +252,108 @@ export const decrypt = (aes_ciphertext: string, secret: string): string => {
   return plaintext;
 };
 
-export const generateGroupSymmetricKey = (): Uint8Array => {
-  return nacl.randomBytes(nacl.secretbox.keyLength);
+/**
+ * Generate a 32 byte symmetric key for the group to use.
+ * @returns { string } - The group symmetric key.
+ */
+export const generateGroupSymmetricKey = (): string => {
+  if (!nacl) throw new Error('Nacl is not loaded');
+  const key: Uint8Array = nacl.random_bytes(32);
+  return nacl.to_hex(key);
 };
 
-export const encryptGroupMessage = (
+/**
+ * Generate a key pair for encryption and decryption.
+ * @returns { publicKey: string, privateKey: string } - The key pair containing the public key and private key.
+ */
+export const generateKeyPair = (): { publicKey: string; privateKey: string } => {
+  if (!nacl) throw new Error('Nacl is not loaded');
+  const keypair = nacl.crypto_box_keypair();
+  return { publicKey: nacl.to_hex(keypair.boxPk), privateKey: nacl.to_hex(keypair.boxSk) };
+};
+
+/**
+ * Encrypt a message using the group symmetric key.
+ * @param message - The message to be encrypted.
+ * @param group_secret - The group symmetric key used for encryption.
+ * @returns HexCipher - The encrypted ciphertext and nonce.
+ */
+export const encryptGroupMessage = (message: string, group_secret: string): HexCipher => {
+  if (!nacl) throw new Error('Nacl is not loaded');
+  const nonce = nacl.crypto_secretbox_random_nonce();
+  const ciphertext = nacl.crypto_secretbox(nacl.encode_utf8(message), nonce, nacl.from_hex(group_secret));
+  return { ciphertext: nacl.to_hex(ciphertext), nonce: nacl.to_hex(nonce) };
+};
+
+/**
+ * Decrypt a message using the group symmetric key.
+ * @param ciphertext - The encrypted ciphertext.
+ * @param nonce - The nonce used for encryption.
+ * @param group_secret - The group symmetric key used for decryption.
+ * @returns string | null - The decrypted message or null if decryption fails.
+ */
+export const decryptGroupMessage = (ciphertext: string, nonce: string, group_secret: string): string | null => {
+  if (!nacl) throw new Error('Nacl is not loaded');
+  if (nonce.length === 0) {
+    return null;
+  }
+  const ciphertext_bytes: Uint8Array = nacl.from_hex(ciphertext);
+  const nonce_bytes: Uint8Array = nacl.from_hex(nonce);
+  const group_secret_bytes: Uint8Array = nacl.from_hex(group_secret);
+  console.log(nonce_bytes, 'nonce_bytes');
+  const plaintext = nacl.crypto_secretbox_open(ciphertext_bytes, nonce_bytes, group_secret_bytes);
+  return plaintext ? nacl.decode_utf8(plaintext) : null;
+};
+
+/**
+ * Encrypt a message using sender's private key and recipients's public key.
+ * @param message - The message to be encrypted.
+ * @param sender_private_key - The sender's private key.
+ * @param recipient_public_key - The recipient's public key.
+ * @returns HexCipher - The encrypted ciphertext and nonce.
+ */
+export const encryptMessage = (
   message: string,
-  groupSymmetricKey: Uint8Array,
-): { ciphertext: Uint8Array; nonce: Uint8Array } => {
-  const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
-  const ciphertext = nacl.secretbox(message, nonce, groupSymmetricKey);
-  return { ciphertext, nonce };
+  sender_private_key: string,
+  recipient_public_key: string,
+): HexCipher => {
+  if (!nacl) throw new Error('Nacl is not loaded');
+  const nonce = nacl.crypto_box_random_nonce();
+  const ciphertext = nacl.crypto_box(
+    nacl.encode_utf8(message),
+    nonce,
+    nacl.from_hex(recipient_public_key),
+    nacl.from_hex(sender_private_key),
+  );
+  return { ciphertext: nacl.to_hex(ciphertext), nonce: nacl.to_hex(nonce) };
 };
 
-export const decryptGroupMessage = (
-  ciphertext: Uint8Array,
-  nonce: Uint8Array,
-  groupSymmetricKey: Uint8Array,
+/**
+ * Decrypt a message using sender's public key and recipients's private key.
+ * @param ciphertext - The encrypted ciphertext.
+ * @param nonce - The nonce used for encryption.
+ * @param sender_public_key - The sender's public key.
+ * @param recipient_private_key - The recipient's private key.
+ * @returns string | null - The decrypted message or null if decryption fails.
+ */
+export const decryptMessage = (
+  ciphertext: string,
+  nonce: string,
+  sender_public_key: string,
+  recipient_private_key: string,
 ): string | null => {
-  const plaintext = nacl.secretbox.open(ciphertext, nonce, groupSymmetricKey);
-  return plaintext ? nacl.util.encodeUTF8(plaintext) : null;
-};
-
-export const encryptGroupSymmetricKey = (
-  groupSymmetricKey: Uint8Array,
-  recipientPublicKey: Uint8Array,
-  senderPrivateKey: Uint8Array,
-) => {
-  const nonce = nacl.randomBytes(nacl.box.nonceLength);
-  const encryptedKey = nacl.box(groupSymmetricKey, nonce, recipientPublicKey, senderPrivateKey);
-  return { encryptedKey, nonce };
-};
-
-export const decryptGroupSymmetricKey = (
-  encryptedKey: Uint8Array,
-  senderPublicKey: Uint8Array,
-  privateKey: Uint8Array,
-  nonce: Uint8Array,
-): Uint8Array | null => {
-  const decryptedKey = nacl.box.open(encryptedKey, nonce, senderPublicKey, privateKey);
-  return decryptedKey ? decryptedKey : null;
+  if (!nacl) throw new Error('Nacl is not loaded');
+  const ciphertext_bytes: Uint8Array = nacl.from_hex(ciphertext);
+  const nonce_bytes: Uint8Array = nacl.from_hex(nonce);
+  const sender_public_key_bytes: Uint8Array = nacl.from_hex(sender_public_key);
+  const recipient_private_key_bytes: Uint8Array = nacl.from_hex(recipient_private_key);
+  const plaintext = nacl.crypto_box_open(
+    ciphertext_bytes,
+    nonce_bytes,
+    sender_public_key_bytes,
+    recipient_private_key_bytes,
+  );
+  return plaintext ? nacl.decode_utf8(plaintext) : null;
 };
 
 export const resolve = async (path: string) => {

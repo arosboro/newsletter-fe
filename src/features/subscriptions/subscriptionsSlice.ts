@@ -108,9 +108,9 @@ export const decryptSubscriptionMappings = createAsyncThunk(
       const recipient = mapping.secret.recipient as string;
       const group_secret = mapping.newsletter.data.group_secret.slice(0, -12);
       try {
-        const title = await resolve(decode(mapping.newsletter.data.title));
-        const template = await resolve(decode(mapping.newsletter.data.template));
-        const content = await resolve(decode(mapping.newsletter.data.content));
+        const title = await resolve(decode((mapping.newsletter as Record).data.title));
+        const template = await resolve(decode((mapping.newsletter as Record).data.template));
+        const content = await resolve(decode((mapping.newsletter as Record).data.content));
         console.log(title, template, content, 'decoded');
         const newsletter_decrypted = {
           ...mapping.newsletter,

@@ -26,7 +26,7 @@ import {
   togglePrivacyMode,
   toggleTemplateMode,
   selectGroupSecret,
-  selectIndividualSecret,
+  selectIndividualPrivateKey,
   NewsletterRecord,
   selectNewsletter,
 } from '@/features/newsletters/newslettersSlice';
@@ -45,7 +45,7 @@ const Editor: FC = () => {
   const template_mode = useSelector(selectTemplateMode);
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
   const secret: string = useSelector(selectGroupSecret);
-  const individual_secret: string = useSelector(selectIndividualSecret);
+  const individual_secret: string = useSelector(selectIndividualPrivateKey);
   const newsletter: NewsletterRecord = useSelector(selectNewsletter);
   const dispatch = useDispatch<AppDispatch>();
 
@@ -85,9 +85,9 @@ const Editor: FC = () => {
     if (!publicKey) throw new WalletNotConnectedError();
 
     // Make immutable hash of the string values.
-    const title_address = await ipfsAdd(title_ciphertext);
-    const template_address = await ipfsAdd(template_ciphertext);
-    const content_address = await ipfsAdd(content_ciphertext);
+    const title_address = await ipfsAdd(title_ciphertext.ciphertext);
+    const template_address = await ipfsAdd(template_ciphertext.ciphertext);
+    const content_address = await ipfsAdd(content_ciphertext.ciphertext);
 
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
@@ -150,9 +150,9 @@ const Editor: FC = () => {
     if (!publicKey) throw new WalletNotConnectedError();
 
     // Make immutable hash of the string values.
-    const title_address = await ipfsAdd(title_ciphertext);
-    const template_address = await ipfsAdd(template_ciphertext);
-    const content_address = await ipfsAdd(content_ciphertext);
+    const title_address = await ipfsAdd(title_ciphertext.ciphertext);
+    const template_address = await ipfsAdd(template_ciphertext.ciphertext);
+    const content_address = await ipfsAdd(content_ciphertext.ciphertext);
 
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
