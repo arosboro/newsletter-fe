@@ -27,7 +27,7 @@ const Reader: FC = () => {
   const newsletter = useSelector(selectNewsletter);
   const title = useSelector(selectTitle);
   const content = useSelector(selectContent);
-  const group_secret = useSelector(selectGroupSecret);
+  const group_symmetric_key = useSelector(selectGroupSecret);
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
   const dispatch = useDispatch<AppDispatch>();
 
@@ -66,16 +66,16 @@ const Reader: FC = () => {
     if (!newsletter) throw new Error('No newsletter found');
 
     // The newsletter here is an output from the Requesting Records above
-    // newsletter: Newsletter, secret: u128, shared_secret: Bytes64, shared_recipient: Bytes112
+    // newsletter: Newsletter, secret: u128, shared_public_key: Bytes64, shared_recipient: Bytes112
     const secret_bigint = padArray([BigInt(secret)], 1);
-    const shared_secret_bigints = padArray(splitStringToBigInts(encrypt(secret, group_secret)), 4);
-    const shared_recipient_bigints = padArray(splitStringToBigInts(encrypt(publicKey, group_secret)), 7);
+    const shared_public_key_bigints = padArray(splitStringToBigInts(encrypt(secret, group_symmetric_key)), 4);
+    const shared_recipient_bigints = padArray(splitStringToBigInts(encrypt(publicKey, group_symmetric_key)), 7);
 
     // The newsletter here is an output from the Requesting Records above
     const inputs = [
       newsletter,
       `${secret_bigint[0]}u128`,
-      `${format_bigints(shared_secret_bigints)}`,
+      `${format_bigints(shared_public_key_bigints)}`,
       `${format_bigints(shared_recipient_bigints)}`,
     ];
 

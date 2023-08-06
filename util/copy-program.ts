@@ -5,7 +5,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 
-dotenv.config();
+// load variables from .env file into process.env
+dotenv.config({ path: `./.env.local`, override: true });
 
 // define paths relative to this script's directory
 const mainAleoPath = path.join(__dirname, '../aleo/newsletter/build/main.aleo');
@@ -14,6 +15,7 @@ const outputFilePath = path.join(__dirname, '../src/aleo/newsletter-program.ts')
 // get values from .env
 const PROGRAM_NAME = process.env.PROGRAM_NAME;
 const ADDRESS = process.env.ADDRESS;
+console.log(PROGRAM_NAME);
 
 // read the main.aleo file
 fs.readFile(mainAleoPath, 'utf8')

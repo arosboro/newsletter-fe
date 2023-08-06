@@ -12,7 +12,7 @@ const Deploy: FC = () => {
   const { wallet, publicKey } = useWallet();
   const { data, error, isLoading } = useSWR('programData', () => getProgram(NewsletterProgramId, TESTNET3_API_URL));
 
-  const [program] = useState(NewsletterProgram)[0];
+  const program = NewsletterProgram;
   const [fee, setFee] = useState<string>('9.99');
   const [transactionId, setTransactionId] = useState<string | undefined>();
   const [status, setStatus] = useState<string | undefined>();

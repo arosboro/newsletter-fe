@@ -29,8 +29,8 @@ export interface NewsletterRecord {
     title_nonce: string;
     content: string[] | string | null;
     content_nonce: string;
-    group_secret: string;
-    individual_secret: string;
+    group_symmetric_key: string;
+    individual_private_key: string;
   };
 }
 
@@ -63,7 +63,7 @@ export type NewsletterState = {
   template_mode: boolean;
   privacy_mode: boolean;
   public_key: string | null;
-  group_secret: string;
+  group_symmetric_key: string;
   individual_private_key: string;
   individual_public_key: string;
   status: 'uninitialized' | 'loading' | 'idle';
@@ -93,7 +93,7 @@ const initialState: NewsletterState = {
   template_mode: true,
   privacy_mode: false,
   public_key: null,
-  group_secret: '',
+  group_symmetric_key: '',
   individual_private_key: '',
   individual_public_key: '',
   status: 'uninitialized',
@@ -108,8 +108,8 @@ export const processNewsletterData = (record: NewsletterRecord) => {
     member_sequence: BigInt((record.data.member_sequence as string).slice(0, -12)).toString(),
     base: (record.data.base as string).slice(0, -8) === 'true',
     revision: (record.data.revision as string).slice(0, -8) === 'true',
-    group_secret: BigInt((record.data.group_secret as string).slice(0, -12)).toString(),
-    individual_secret: BigInt((record.data.individual_secret as string).slice(0, -12)).toString(),
+    group_symmetric_key: BigInt((record.data.group_symmetric_key as string).slice(0, -12)).toString(),
+    individual_private_key: BigInt((record.data.individual_private_key as string).slice(0, -12)).toString(),
   };
   return { ...record, data: data };
 };
@@ -149,7 +149,7 @@ export const decryptNewsletterRecords = createAsyncThunk(
   async (records: NewsletterRecord[]) => {
     const decrypted_records: NewsletterRecord[] = [];
     records.forEach((record: NewsletterRecord) => {
-      const group_secret: string = record.data.group_secret.slice(0, -12);
+      const group_symmetric_key: string = record.data.group_symmetric_key.slice(0, -12);
       if (record.data.template === null || record.data.title === null || record.data.content === null) {
         return;
       }
@@ -160,13 +160,17 @@ export const decryptNewsletterRecords = createAsyncThunk(
       ) {
         return;
       }
-      const title: string | null = decryptGroupMessage(record.data.title, record.data.title_nonce, group_secret);
+      const title: string | null = decryptGroupMessage(record.data.title, record.data.title_nonce, group_symmetric_key);
       const template: string | null = decryptGroupMessage(
         record.data.template,
         record.data.template_nonce,
-        group_secret,
+        group_symmetric_key,
       );
-      const content: string | null = decryptGroupMessage(record.data.content, record.data.content_nonce, group_secret);
+      const content: string | null = decryptGroupMessage(
+        record.data.content,
+        record.data.content_nonce,
+        group_symmetric_key,
+      );
       const data = {
         ...record.data,
         title: title,
@@ -214,17 +218,17 @@ const newslettersSlice = createSlice({
           state.title = decryptGroupMessage(
             state.title_ciphertext.ciphertext,
             state.title_ciphertext.nonce,
-            state.group_secret,
+            state.group_symmetric_key,
           );
           state.template = decryptGroupMessage(
             state.template_ciphertext.ciphertext,
             state.template_ciphertext.nonce,
-            state.group_secret,
+            state.group_symmetric_key,
           );
           state.content = decryptGroupMessage(
             state.content_ciphertext.ciphertext,
             state.content_ciphertext.nonce,
-            state.group_secret,
+            state.group_symmetric_key,
           );
         }
       }
@@ -240,22 +244,21 @@ const newslettersSlice = createSlice({
         state.template = state.newsletter.data.template as string;
         state.content = state.newsletter.data.content as string;
       }
-      state.group_secret = state.newsletter.data.group_secret.replace(/u128.private/g, '');
-      state.title_ciphertext = encryptGroupMessage(state.title, state.group_secret);
-      state.template_ciphertext = encryptGroupMessage(state.template, state.group_secret);
-      state.content_ciphertext = encryptGroupMessage(state.content, state.group_secret);
+      state.group_symmetric_key = state.newsletter.data.group_symmetric_key.replace(/u128.private/g, '');
+      state.title_ciphertext = encryptGroupMessage(state.title, state.group_symmetric_key);
+      state.template_ciphertext = encryptGroupMessage(state.template, state.group_symmetric_key);
+      state.content_ciphertext = encryptGroupMessage(state.content, state.group_symmetric_key);
     },
     initDraft: (state) => {
       const individual_key_pair = generateKeyPair();
-      console.log(individual_key_pair, 'individual_key_pair');
       state.newsletter = {} as NewsletterRecord;
       state.title = '';
       state.title_nonce = '';
       state.template = '';
       state.content = '';
-      state.group_secret = generateGroupSymmetricKey();
-      state.individual_private_key = individual_key_pair.privateKey.toString();
-      state.individual_public_key = individual_key_pair.publicKey.toString();
+      state.group_symmetric_key = generateGroupSymmetricKey();
+      state.individual_private_key = individual_key_pair.privateKey;
+      state.individual_public_key = individual_key_pair.publicKey;
       state.title_ciphertext = {} as HexCipher;
       state.template_ciphertext = {} as HexCipher;
       state.content_ciphertext = {} as HexCipher;
@@ -270,10 +273,10 @@ const newslettersSlice = createSlice({
           state.draft_content = state.content as string;
         }
         state.title = action.payload;
-        if (state.group_secret === '') {
-          state.group_secret = generateGroupSymmetricKey();
+        if (state.group_symmetric_key === '') {
+          state.group_symmetric_key = generateGroupSymmetricKey();
         }
-        state.title_ciphertext = encryptGroupMessage(action.payload, state.group_secret);
+        state.title_ciphertext = encryptGroupMessage(action.payload, state.group_symmetric_key);
       }
     },
     setTemplate: (state, action: PayloadAction<string>) => {
@@ -286,10 +289,10 @@ const newslettersSlice = createSlice({
           state.draft_content = state.content as string;
         }
         state.template = action.payload;
-        if (state.group_secret === '') {
-          state.group_secret = generateGroupSymmetricKey();
+        if (state.group_symmetric_key === '') {
+          state.group_symmetric_key = generateGroupSymmetricKey();
         }
-        state.template_ciphertext = encryptGroupMessage(action.payload, state.group_secret);
+        state.template_ciphertext = encryptGroupMessage(action.payload, state.group_symmetric_key);
       }
     },
     setContent: (state, action: PayloadAction<string>) => {
@@ -302,10 +305,10 @@ const newslettersSlice = createSlice({
           state.draft_content = action.payload as string;
         }
         state.content = action.payload;
-        if (state.group_secret === '') {
-          state.group_secret = generateGroupSymmetricKey();
+        if (state.group_symmetric_key === '') {
+          state.group_symmetric_key = generateGroupSymmetricKey();
         }
-        state.content_ciphertext = encryptGroupMessage(action.payload, state.group_secret);
+        state.content_ciphertext = encryptGroupMessage(action.payload, state.group_symmetric_key);
       }
     },
   },
@@ -367,13 +370,13 @@ const newslettersSlice = createSlice({
         state.title = example.title;
         state.template = example.template;
         state.content = example.content;
-        state.group_secret = generateGroupSymmetricKey();
-        const individual_secret = generateKeyPair();
-        state.individual_private_key = individual_secret.privateKey.toString();
-        state.individual_public_key = individual_secret.publicKey.toString();
-        state.title_ciphertext = encryptGroupMessage(state.title as string, state.group_secret);
-        state.template_ciphertext = encryptGroupMessage(state.template as string, state.group_secret);
-        state.content_ciphertext = encryptGroupMessage(state.content as string, state.group_secret);
+        state.group_symmetric_key = generateGroupSymmetricKey();
+        const individual_private_key = generateKeyPair();
+        state.individual_private_key = individual_private_key.privateKey.toString();
+        state.individual_public_key = individual_private_key.publicKey.toString();
+        state.title_ciphertext = encryptGroupMessage(state.title as string, state.group_symmetric_key);
+        state.template_ciphertext = encryptGroupMessage(state.template as string, state.group_symmetric_key);
+        state.content_ciphertext = encryptGroupMessage(state.content as string, state.group_symmetric_key);
         state.status = 'idle';
       })
       .addCase(fetchExample.rejected, (state, action) => {
@@ -440,7 +443,7 @@ export const selectIssues = createSelector(selectUnspentNewsletters, (newsletter
   return Object.values(newsletter_list).filter((record) => record.data.revision);
 });
 
-export const selectGroupSecret = (state: { newsletters: NewsletterState }) => state.newsletters.group_secret;
+export const selectGroupSecret = (state: { newsletters: NewsletterState }) => state.newsletters.group_symmetric_key;
 
 export const selectIndividualPrivateKey = (state: { newsletters: NewsletterState }) =>
   state.newsletters.individual_private_key;

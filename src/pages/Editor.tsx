@@ -45,13 +45,13 @@ const Editor: FC = () => {
   const template_mode = useSelector(selectTemplateMode);
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
   const secret: string = useSelector(selectGroupSecret);
-  const individual_secret: string = useSelector(selectIndividualPrivateKey);
+  const individual_private_key: string = useSelector(selectIndividualPrivateKey);
   const newsletter: NewsletterRecord = useSelector(selectNewsletter);
   const dispatch = useDispatch<AppDispatch>();
 
   // Long assignment of a template string to a variable
   // Get the inital secret as a random string of chacters from a whole number
-  const [shared_secret, setSharedSecret] = React.useState('');
+  const [shared_public_key, setSharedSecret] = React.useState('');
   const [shared_recipient, setSharedRecipient] = React.useState('');
   const [fee, setFee] = React.useState<string>('3.0365');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
@@ -76,9 +76,9 @@ const Editor: FC = () => {
   useEffect(() => {
     // set the sharedSecret and sharedRecipient
     if (!publicKey) return;
-    setSharedSecret(encrypt(individual_secret, secret));
+    setSharedSecret(encrypt(individual_private_key, secret));
     setSharedRecipient(encrypt(publicKey, secret));
-  }, [secret, individual_secret, publicKey]);
+  }, [secret, individual_private_key, publicKey]);
 
   const handleCreateNewsletter = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -92,9 +92,9 @@ const Editor: FC = () => {
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
     const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
-    const group_secret_bigint = padArray([BigInt(secret)], 1);
-    const individual_secret_bigint = padArray([BigInt(individual_secret)], 1);
-    const shared_secret_bigints = padArray(splitStringToBigInts(shared_secret), 4);
+    const group_symmetric_key_bigint = padArray([BigInt(secret)], 1);
+    const individual_private_key_bigint = padArray([BigInt(individual_private_key)], 1);
+    const shared_public_key_bigints = padArray(splitStringToBigInts(shared_public_key), 4);
     const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 7);
 
     // Desired format is a string of the form:
@@ -115,9 +115,9 @@ const Editor: FC = () => {
       `${format_bigints(title_bigints)}`,
       `${format_bigints(template_bigints)}`,
       `${format_bigints(content_bigints)}`,
-      `${group_secret_bigint[0]}u128`,
-      `${individual_secret_bigint[0]}u128`,
-      `${format_bigints(shared_secret_bigints)}`,
+      `${group_symmetric_key_bigint[0]}u128`,
+      `${individual_private_key_bigint[0]}u128`,
+      `${format_bigints(shared_public_key_bigints)}`,
       `${format_bigints(shared_recipient_bigints)}`,
     ];
 
@@ -157,9 +157,9 @@ const Editor: FC = () => {
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
     const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
-    const group_secret_bigint = padArray([BigInt(secret)], 1);
-    const individual_secret_bigint = padArray([BigInt(individual_secret)], 1);
-    const shared_secret_bigints = padArray(splitStringToBigInts(shared_secret), 4);
+    const group_symmetric_key_bigint = padArray([BigInt(secret)], 1);
+    const individual_private_key_bigint = padArray([BigInt(individual_private_key)], 1);
+    const shared_public_key_bigints = padArray(splitStringToBigInts(shared_public_key), 4);
     const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 7);
 
     // Desired format is a string of the form:
@@ -170,9 +170,9 @@ const Editor: FC = () => {
       `${format_bigints(title_bigints)}`,
       `${format_bigints(template_bigints)}`,
       `${format_bigints(content_bigints)}`,
-      `${group_secret_bigint[0]}u128`,
-      `${individual_secret_bigint[0]}u128`,
-      `${format_bigints(shared_secret_bigints)}`,
+      `${group_symmetric_key_bigint[0]}u128`,
+      `${individual_private_key_bigint[0]}u128`,
+      `${format_bigints(shared_public_key_bigints)}`,
       `${format_bigints(shared_recipient_bigints)}`,
     ];
 
@@ -181,7 +181,7 @@ const Editor: FC = () => {
     const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
 
     const test1 = encrypt('13509774859604697084', '11708986043611107324');
-    console.log(test1, 'shared_secret');
+    console.log(test1, 'shared_public_key');
     const test2 = encrypt('aleo1rzhda63qd45uwg46qtf4ahv5zpuap5s9u8qdtlks7239hghckg8qhvqcgu', '11708986043611107324');
     console.log(test2, 'shared_recipient');
     const test1_bigints = padArray(splitStringToBigInts(test1), 4);
@@ -281,7 +281,7 @@ const Editor: FC = () => {
                   <div>{`Transaction status: ${status}`}</div>
                 </div>
               )}
-              <input type="submit" disabled={!publicKey || !shared_secret || !shared_recipient} value="Submit" />
+              <input type="submit" disabled={!publicKey || !shared_public_key || !shared_recipient} value="Submit" />
             </div>
           )}
         </form>

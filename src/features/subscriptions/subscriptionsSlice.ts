@@ -20,7 +20,7 @@ export interface SubscriptionRecord {
 }
 
 export interface SharedSecret {
-  shared_secret: string[] | string;
+  shared_public_key: string[] | string;
   recipient: string[] | string;
 }
 
@@ -66,7 +66,7 @@ export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupR
     return processNewsletterData(record);
   });
   const subscription_records = records.filter((record) => isSubscriptionRecord(record)) as SubscriptionRecord[];
-  const shared_secrets: SharedSecretMapping[] = [];
+  const shared_public_keys: SharedSecretMapping[] = [];
   for (let i = 0; i < subscription_records.length; i++) {
     const subscription: SubscriptionRecord = processSubscriptionData(subscription_records[i]);
     const member_secret_idx = `${subscription.data.member_secret_idx}field`;
@@ -89,13 +89,13 @@ export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupR
       }
     }
     const newsletter = unique_newsletters[0];
-    const shared_secret: SharedSecret = {
-      shared_secret: decode(member_secret.shared_secret),
+    const shared_public_key: SharedSecret = {
+      shared_public_key: decode(member_secret.shared_public_key),
       recipient: decode(member_secret.recipient),
     };
-    shared_secrets.push({ subscription: subscription, newsletter: newsletter, secret: shared_secret });
+    shared_public_keys.push({ subscription: subscription, newsletter: newsletter, secret: shared_public_key });
   }
-  return shared_secrets;
+  return shared_public_keys;
 });
 
 export const decryptSubscriptionMappings = createAsyncThunk(
@@ -104,9 +104,9 @@ export const decryptSubscriptionMappings = createAsyncThunk(
     const decrypted_mappings: SharedSecretMapping[] = [];
     for (let i = 0; i < mappings.length; i++) {
       const mapping: SharedSecretMapping = mappings[i];
-      const shared_secret = mapping.secret.shared_secret as string;
+      const shared_public_key = mapping.secret.shared_public_key as string;
       const recipient = mapping.secret.recipient as string;
-      const group_secret = mapping.newsletter.data.group_secret.slice(0, -12);
+      const group_symmetric_key = mapping.newsletter.data.group_symmetric_key.slice(0, -12);
       try {
         const title = await resolve(decode((mapping.newsletter as Record).data.title));
         const template = await resolve(decode((mapping.newsletter as Record).data.template));
@@ -116,21 +116,21 @@ export const decryptSubscriptionMappings = createAsyncThunk(
           ...mapping.newsletter,
           data: {
             ...mapping.newsletter.data,
-            group_secret: group_secret,
-            title: decrypt(title, group_secret),
-            template: decrypt(template, group_secret),
-            content: decrypt(content, group_secret),
+            group_symmetric_key: group_symmetric_key,
+            title: decrypt(title, group_symmetric_key),
+            template: decrypt(template, group_symmetric_key),
+            content: decrypt(content, group_symmetric_key),
           },
         };
         console.log(newsletter_decrypted, 'newsletter decrypted');
-        const shared_secret_decoded: SharedSecret = {
-          shared_secret: decrypt(shared_secret, group_secret),
-          recipient: decrypt(recipient, group_secret),
+        const shared_public_key_decoded: SharedSecret = {
+          shared_public_key: decrypt(shared_public_key, group_symmetric_key),
+          recipient: decrypt(recipient, group_symmetric_key),
         };
         decrypted_mappings.push({
           ...mapping,
           newsletter: newsletter_decrypted,
-          secret: shared_secret_decoded,
+          secret: shared_public_key_decoded,
         } as SharedSecretMapping);
         return decrypted_mappings;
       } catch (e) {
@@ -163,11 +163,14 @@ const subscriptionsSlice = createSlice({
           if (typeof state.newsletter_list[newsletter_id] === 'undefined') {
             state.newsletter_list[newsletter_id] = [];
           }
-          mapping.secret.shared_secret = decrypt(
-            mapping.secret.shared_secret as string,
-            mapping.newsletter.data.group_secret,
+          mapping.secret.shared_public_key = decrypt(
+            mapping.secret.shared_public_key as string,
+            mapping.newsletter.data.group_symmetric_key,
           );
-          mapping.secret.recipient = decrypt(mapping.secret.recipient as string, mapping.newsletter.data.group_secret);
+          mapping.secret.recipient = decrypt(
+            mapping.secret.recipient as string,
+            mapping.newsletter.data.group_symmetric_key,
+          );
           state.newsletter_list[newsletter_id].push(mapping);
         }
         state.status = 'idle';

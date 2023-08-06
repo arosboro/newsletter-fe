@@ -26,8 +26,8 @@ export interface NewsletterRecord {
     template: string[] | string;
     title: string[] | string;
     content: string[] | string;
-    group_secret: string;
-    individual_secret: string;
+    group_symmetric_key: string;
+    individual_private_key: string;
   };
 }
 
@@ -46,7 +46,7 @@ export interface SubscriptionRecord {
 }
 
 export interface SharedSecret {
-  shared_secret: string[] | string;
+  shared_public_key: string[] | string;
   recipient: string[] | string;
 }
 
@@ -275,13 +275,13 @@ export const generateKeyPair = (): { publicKey: string; privateKey: string } => 
 /**
  * Encrypt a message using the group symmetric key.
  * @param message - The message to be encrypted.
- * @param group_secret - The group symmetric key used for encryption.
+ * @param group_symmetric_key - The group symmetric key used for encryption.
  * @returns HexCipher - The encrypted ciphertext and nonce.
  */
-export const encryptGroupMessage = (message: string, group_secret: string): HexCipher => {
+export const encryptGroupMessage = (message: string, group_symmetric_key: string): HexCipher => {
   if (!nacl) throw new Error('Nacl is not loaded');
   const nonce = nacl.crypto_secretbox_random_nonce();
-  const ciphertext = nacl.crypto_secretbox(nacl.encode_utf8(message), nonce, nacl.from_hex(group_secret));
+  const ciphertext = nacl.crypto_secretbox(nacl.encode_utf8(message), nonce, nacl.from_hex(group_symmetric_key));
   return { ciphertext: nacl.to_hex(ciphertext), nonce: nacl.to_hex(nonce) };
 };
 
@@ -289,19 +289,18 @@ export const encryptGroupMessage = (message: string, group_secret: string): HexC
  * Decrypt a message using the group symmetric key.
  * @param ciphertext - The encrypted ciphertext.
  * @param nonce - The nonce used for encryption.
- * @param group_secret - The group symmetric key used for decryption.
+ * @param group_symmetric_key - The group symmetric key used for decryption.
  * @returns string | null - The decrypted message or null if decryption fails.
  */
-export const decryptGroupMessage = (ciphertext: string, nonce: string, group_secret: string): string | null => {
+export const decryptGroupMessage = (ciphertext: string, nonce: string, group_symmetric_key: string): string | null => {
   if (!nacl) throw new Error('Nacl is not loaded');
   if (nonce.length === 0) {
     return null;
   }
   const ciphertext_bytes: Uint8Array = nacl.from_hex(ciphertext);
   const nonce_bytes: Uint8Array = nacl.from_hex(nonce);
-  const group_secret_bytes: Uint8Array = nacl.from_hex(group_secret);
-  console.log(nonce_bytes, 'nonce_bytes');
-  const plaintext = nacl.crypto_secretbox_open(ciphertext_bytes, nonce_bytes, group_secret_bytes);
+  const group_symmetric_key_bytes: Uint8Array = nacl.from_hex(group_symmetric_key);
+  const plaintext = nacl.crypto_secretbox_open(ciphertext_bytes, nonce_bytes, group_symmetric_key_bytes);
   return plaintext ? nacl.decode_utf8(plaintext) : null;
 };
 

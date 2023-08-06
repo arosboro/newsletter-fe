@@ -26,8 +26,8 @@ export const Subscribers = ({ programId, useWallet, parent_status, record }: Pro
         setRecords(res.filter((record: SubscriptionRecord) => !record.spent && Object.keys(record.data).length === 5));
         for (let i = 0; i < records.length; i++) {
           const mappings_copy = mappings;
-          const shared_secret: SharedSecret = await resolve_addr_from_mapping(records[i].data.member_secret_idx);
-          const secret: SharedSecretMapping = { key: records[i].id, value: shared_secret };
+          const shared_public_key: SharedSecret = await resolve_addr_from_mapping(records[i].data.member_secret_idx);
+          const secret: SharedSecretMapping = { key: records[i].id, value: shared_public_key };
           mappings_copy.push(secret);
           setMappings(mappings_copy);
         }
