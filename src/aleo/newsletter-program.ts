@@ -1,6 +1,6 @@
-export const NewsletterProgramId = 'newsletter_v0_0_6.aleo';
+export const NewsletterProgramId = 'newsletter_v0_0_7.aleo';
 
-export const NewsletterProgram = `program newsletter_v0_0_6.aleo;
+export const NewsletterProgram = `program newsletter_v0_0_7.aleo;
 
 struct Bytes24:
     b0 as u8;

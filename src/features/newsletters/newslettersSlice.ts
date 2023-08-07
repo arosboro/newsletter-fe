@@ -177,9 +177,7 @@ export const decryptNewsletterRecords = createAsyncThunk(
       ) {
         return;
       }
-      console.log(record.data.title, record.data.title_nonce, group_symmetric_key);
       const title: string | null = decryptGroupMessage(record.data.title, record.data.title_nonce, group_symmetric_key);
-      console.log(record.data.template, record.data.template_nonce, group_symmetric_key);
       const template: string | null = decryptGroupMessage(
         record.data.template,
         record.data.template_nonce as string,
@@ -271,6 +269,12 @@ const newslettersSlice = createSlice({
       state.template_nonce = state.template_ciphertext.nonce;
       state.content_ciphertext = encryptGroupMessage(state.content, state.group_symmetric_key);
       state.content_nonce = state.content_ciphertext.nonce;
+      state.individual_private_key = state.newsletter.data.individual_private_key as string;
+      if (state.individual_private_key === '') {
+        const individual_key_pair = generateKeyPair();
+        state.individual_private_key = individual_key_pair.privateKey;
+        state.individual_public_key = individual_key_pair.publicKey;
+      }
     },
     initDraft: (state) => {
       const individual_key_pair = generateKeyPair();
@@ -398,8 +402,8 @@ const newslettersSlice = createSlice({
         state.content = example.content;
         state.group_symmetric_key = generateGroupSymmetricKey();
         const individual_private_key = generateKeyPair();
-        state.individual_private_key = individual_private_key.privateKey.toString();
-        state.individual_public_key = individual_private_key.publicKey.toString();
+        state.individual_private_key = individual_private_key.privateKey;
+        state.individual_public_key = individual_private_key.publicKey;
         state.title_ciphertext = encryptGroupMessage(state.title as string, state.group_symmetric_key);
         state.title_nonce = state.title_ciphertext.nonce;
         state.template_ciphertext = encryptGroupMessage(state.template as string, state.group_symmetric_key);

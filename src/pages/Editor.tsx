@@ -236,8 +236,9 @@ const Editor: FC = () => {
   };
 
   const getTransactionStatus = async (txId: string) => {
-    const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
-    setStatus(status);
+    const wallet_status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
+    setStatus(wallet_status);
+    console.log(status);
     if (status === 'Finalized') {
       setStatus(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));

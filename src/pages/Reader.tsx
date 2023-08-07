@@ -15,6 +15,8 @@ import { AppDispatch } from '@/app/store';
 import {
   selectContent,
   selectGroupSecret,
+  selectIndividualPrivateKey,
+  selectIndividualPublicKey,
   selectNewsletter,
   selectPrivacyMode,
   selectTitle,
@@ -28,17 +30,12 @@ const Reader: FC = () => {
   const title = useSelector(selectTitle);
   const content = useSelector(selectContent);
   const group_symmetric_key = useSelector(selectGroupSecret);
+  const individual_private_key: string = useSelector(selectIndividualPrivateKey);
+  const individual_public_key: string = useSelector(selectIndividualPublicKey);
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
   const dispatch = useDispatch<AppDispatch>();
 
-  const initSecret = (): bigint => {
-    // Calcuate a 64-bit random integer and subtract 4 bytes
-    const seed = BigInt(Math.floor(Math.random() * 2 ** 64)) - BigInt(4);
-    return seed;
-  };
-
   // Get the inital secret as a random string of chacters from a whole number
-  const secret = React.useState(initSecret().toString())[0];
   const [fee, setFee] = React.useState<string>('1.529307');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
@@ -66,15 +63,15 @@ const Reader: FC = () => {
     if (!newsletter) throw new Error('No newsletter found');
 
     // The newsletter here is an output from the Requesting Records above
-    // newsletter: Newsletter, secret: u128, shared_public_key: Bytes64, shared_recipient: Bytes112
-    const secret_bigint = padArray([BigInt(secret)], 1);
-    const shared_public_key_bigints = padArray(splitStringToBigInts(encrypt(secret, group_symmetric_key)), 4);
-    const shared_recipient_bigints = padArray(splitStringToBigInts(encrypt(publicKey, group_symmetric_key)), 7);
+    // newsletter: Newsletter, secret: Bytes64, shared_public_key: Bytes64, shared_recipient: Bytes64
+    const secret_bigint = padArray(splitStringToBigInts(individual_private_key), 4);
+    const shared_public_key_bigints = padArray(splitStringToBigInts(individual_public_key), 4);
+    const shared_recipient_bigints = padArray(splitStringToBigInts(publicKey), 4);
 
     // The newsletter here is an output from the Requesting Records above
     const inputs = [
       newsletter,
-      `${secret_bigint[0]}u128`,
+      `${format_bigints(secret_bigint)}`,
       `${format_bigints(shared_public_key_bigints)}`,
       `${format_bigints(shared_recipient_bigints)}`,
     ];
