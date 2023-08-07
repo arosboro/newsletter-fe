@@ -3,7 +3,7 @@ import { Record } from '@/features/records/recordsSlice';
 import { isNewsletterRecord, NewsletterRecord, processNewsletterData } from '@/features/newsletters/newslettersSlice';
 import { getMapping } from '@/aleo/rpc';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
-import { decode, decode_u8, decrypt, decryptGroupMessage, resolve } from '@/lib/util';
+import { decode, decode_u8, decryptGroupMessage, resolve } from '@/lib/util';
 
 export interface SubscriptionRecord {
   id: string;
