@@ -7,14 +7,13 @@ import ReaderToolbar from '@/components/ReaderToolbar';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import Toggle from 'react-toggle';
-import { encrypt, format_bigints, padArray, splitStringToBigInts } from '@/lib/util';
+import { format_bigints, padArray, splitStringToBigInts } from '@/lib/util';
 import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@demox-labs/aleo-wallet-adapter-base';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
 import {
   selectContent,
-  selectGroupSecret,
   selectIndividualPrivateKey,
   selectIndividualPublicKey,
   selectNewsletter,
@@ -29,7 +28,6 @@ const Reader: FC = () => {
   const newsletter = useSelector(selectNewsletter);
   const title = useSelector(selectTitle);
   const content = useSelector(selectContent);
-  const group_symmetric_key = useSelector(selectGroupSecret);
   const individual_private_key: string = useSelector(selectIndividualPrivateKey);
   const individual_public_key: string = useSelector(selectIndividualPublicKey);
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
