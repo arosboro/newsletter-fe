@@ -8,17 +8,20 @@ import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@dem
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
-import { padArray, splitStringToBigInts, ipfsAdd, encrypt, ipfsRm, format_bigints } from '@/lib/util';
+import { padArray, splitStringToBigInts, ipfsAdd, encrypt, ipfsRm, format_bigints, nacl_from_hex } from '@/lib/util';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
 import {
   selectContent,
+  selectContentNonce,
   selectContentCiphertext,
   selectTemplateMode,
   selectPrivacyMode,
   selectTemplate,
+  selectTemplateNonce,
   selectTemplateCiphertext,
   selectTitle,
+  selectTitleNonce,
   selectTitleCiphertext,
   setTitle,
   setTemplate,
@@ -29,6 +32,7 @@ import {
   selectIndividualPrivateKey,
   NewsletterRecord,
   selectNewsletter,
+  selectIndividualPublicKey,
 } from '@/features/newsletters/newslettersSlice';
 import 'react-toggle/style.css';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
@@ -37,23 +41,27 @@ import { fetchRecords } from '@/features/records/recordsSlice';
 const Editor: FC = () => {
   const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();
   const title = useSelector(selectTitle);
+  const title_nonce = useSelector(selectTitleNonce);
   const template = useSelector(selectTemplate);
+  const template_nonce = useSelector(selectTemplateNonce);
   const content = useSelector(selectContent);
+  const content_nonce = useSelector(selectContentNonce);
   const title_ciphertext = useSelector(selectTitleCiphertext);
   const template_ciphertext = useSelector(selectTemplateCiphertext);
   const content_ciphertext = useSelector(selectContentCiphertext);
   const template_mode = useSelector(selectTemplateMode);
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
-  const secret: string = useSelector(selectGroupSecret);
+  const group_symmetric_key: string = useSelector(selectGroupSecret);
   const individual_private_key: string = useSelector(selectIndividualPrivateKey);
+  const individual_public_key: string = useSelector(selectIndividualPublicKey);
   const newsletter: NewsletterRecord = useSelector(selectNewsletter);
   const dispatch = useDispatch<AppDispatch>();
 
   // Long assignment of a template string to a variable
   // Get the inital secret as a random string of chacters from a whole number
-  const [shared_public_key, setSharedSecret] = React.useState('');
+  const [shared_public_key, setSharedPublicKey] = React.useState('');
   const [shared_recipient, setSharedRecipient] = React.useState('');
-  const [fee, setFee] = React.useState<string>('3.0365');
+  const [fee, setFee] = React.useState<string>('5.0365');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
 
@@ -75,10 +83,10 @@ const Editor: FC = () => {
 
   useEffect(() => {
     // set the sharedSecret and sharedRecipient
-    if (!publicKey) return;
-    setSharedSecret(encrypt(individual_private_key, secret));
-    setSharedRecipient(encrypt(publicKey, secret));
-  }, [secret, individual_private_key, publicKey]);
+    if (!publicKey || !individual_public_key) return;
+    setSharedPublicKey(individual_public_key);
+    setSharedRecipient(publicKey);
+  }, [individual_public_key, publicKey]);
 
   const handleCreateNewsletter = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -88,14 +96,13 @@ const Editor: FC = () => {
     const title_address = await ipfsAdd(title_ciphertext.ciphertext);
     const template_address = await ipfsAdd(template_ciphertext.ciphertext);
     const content_address = await ipfsAdd(content_ciphertext.ciphertext);
-
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
     const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
-    const group_symmetric_key_bigint = padArray([BigInt(secret)], 1);
-    const individual_private_key_bigint = padArray([BigInt(individual_private_key)], 1);
+    const group_symmetric_key_bigints = padArray(splitStringToBigInts(group_symmetric_key), 4);
+    const individual_private_key_bigints = padArray(splitStringToBigInts(individual_private_key), 4);
     const shared_public_key_bigints = padArray(splitStringToBigInts(shared_public_key), 4);
-    const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 7);
+    const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 4);
 
     // Desired format is a string of the form:
     // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
@@ -110,13 +117,29 @@ const Editor: FC = () => {
       return result;
     };
 
+    const format_u8s = (u8s: Uint8Array | string) => {
+      if (typeof u8s === 'string') {
+        u8s = nacl_from_hex(u8s);
+      }
+      let result = '{ ';
+      for (let i = 0; i < u8s.length; i++) {
+        if (i == u8s.length - 1) result += `b${i}: ${u8s[i]}u8 `;
+        else result += `b${i}: ${u8s[i]}u8, `;
+      }
+      result += '}';
+      return result;
+    };
+
     // The record here is an output from the Requesting Records above
     const inputs = [
       `${format_bigints(title_bigints)}`,
+      `${format_u8s(title_nonce)}`,
       `${format_bigints(template_bigints)}`,
+      `${format_u8s(template_nonce)}`,
       `${format_bigints(content_bigints)}`,
-      `${group_symmetric_key_bigint[0]}u128`,
-      `${individual_private_key_bigint[0]}u128`,
+      `${format_u8s(content_nonce)}`,
+      `${format_bigints(group_symmetric_key_bigints)}`,
+      `${format_bigints(individual_private_key_bigints)}`,
       `${format_bigints(shared_public_key_bigints)}`,
       `${format_bigints(shared_recipient_bigints)}`,
     ];
@@ -157,7 +180,7 @@ const Editor: FC = () => {
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
     const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
-    const group_symmetric_key_bigint = padArray([BigInt(secret)], 1);
+    const group_symmetric_key_bigint = padArray([BigInt(group_symmetric_key)], 1);
     const individual_private_key_bigint = padArray([BigInt(individual_private_key)], 1);
     const shared_public_key_bigints = padArray(splitStringToBigInts(shared_public_key), 4);
     const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 7);
@@ -170,8 +193,8 @@ const Editor: FC = () => {
       `${format_bigints(title_bigints)}`,
       `${format_bigints(template_bigints)}`,
       `${format_bigints(content_bigints)}`,
-      `${group_symmetric_key_bigint[0]}u128`,
-      `${individual_private_key_bigint[0]}u128`,
+      `${format_bigints(group_symmetric_key_bigint)}`,
+      `${format_bigints(individual_private_key_bigint)}`,
       `${format_bigints(shared_public_key_bigints)}`,
       `${format_bigints(shared_recipient_bigints)}`,
     ];

@@ -106,7 +106,8 @@ export const decryptSubscriptionMappings = createAsyncThunk(
       const mapping: SharedSecretMapping = mappings[i];
       const shared_public_key = mapping.secret.shared_public_key as string;
       const recipient = mapping.secret.recipient as string;
-      const group_symmetric_key = mapping.newsletter.data.group_symmetric_key.slice(0, -12);
+      const group_symmetric_key = mapping.newsletter.data.group_symmetric_key as string;
+      console.log(group_symmetric_key, 'group symmetric key');
       try {
         const title = await resolve(decode((mapping.newsletter as Record).data.title));
         const template = await resolve(decode((mapping.newsletter as Record).data.template));
@@ -165,11 +166,11 @@ const subscriptionsSlice = createSlice({
           }
           mapping.secret.shared_public_key = decrypt(
             mapping.secret.shared_public_key as string,
-            mapping.newsletter.data.group_symmetric_key,
+            mapping.newsletter.data.group_symmetric_key as string,
           );
           mapping.secret.recipient = decrypt(
             mapping.secret.recipient as string,
-            mapping.newsletter.data.group_symmetric_key,
+            mapping.newsletter.data.group_symmetric_key as string,
           );
           state.newsletter_list[newsletter_id].push(mapping);
         }

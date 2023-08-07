@@ -14,7 +14,7 @@ const outputFilePath = path.join(__dirname, '../src/aleo/newsletter-program.ts')
 
 // get values from .env
 const PROGRAM_NAME = process.env.PROGRAM_NAME;
-const ADDRESS = process.env.ADDRESS;
+// const ADDRESS = process.env.ADDRESS;
 console.log(PROGRAM_NAME);
 
 // read the main.aleo file

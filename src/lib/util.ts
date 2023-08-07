@@ -165,17 +165,6 @@ export async function ipfsAdd(data: string) {
         return response.data;
       });
 
-    // Add a pin
-    await axios
-      .post(`${import.meta.env.VITE_IPFS_API_ENDPOINT}/pin/add?arg=${response.Hash}`, {
-        headers: {
-          authorization,
-        },
-      })
-      .then((response) => {
-        return response.data;
-      });
-
     return response;
   } catch (error) {
     console.error('IPFS error', error);
@@ -229,6 +218,52 @@ export const decode = (bytes: string[] | string): string => {
   return chunk_decoded;
 };
 
+/**
+ *
+ * @param bytes {
+ *   "b0": "247u8.private",
+ *   "b1": "236u8.private",
+ *   "b2": "220u8.private",
+ *   "b3": "41u8.private",
+ *   "b4": "30u8.private",
+ *   "b5": "161u8.private",
+ *   "b6": "192u8.private",
+ *   "b7": "159u8.private",
+ *   "b8": "12u8.private",
+ *   "b9": "180u8.private",
+ *   "b10": "244u8.private",
+ *   "b11": "143u8.private",
+ *   "b12": "165u8.private",
+ *   "b13": "13u8.private",
+ *   "b14": "179u8.private",
+ *   "b15": "131u8.private",
+ *   "b16": "50u8.private",
+ *   "b17": "126u8.private",
+ *   "b18": "110u8.private",
+ *   "b19": "156u8.private",
+ *   "b20": "223u8.private",
+ *   "b21": "152u8.private",
+ *   "b22": "37u8.private",
+ *   "b23": "118u8.private"
+ * }
+ * @returns string - hex decoded Uint8Array
+ */
+export const decode_u8 = (bytes: string[] | string): string => {
+  if (!nacl) {
+    throw new Error('nacl is not defined');
+  }
+  if (typeof bytes === 'string') {
+    bytes = [bytes];
+  }
+  let chunk_decoded: Uint8Array = new Uint8Array();
+  // Convert to Uint8Array
+  const chunkBuffer = Object.values(bytes).map((chunk) => {
+    return Number(chunk.replace(/(u\d{1,3}|.private|.public)/g, ''));
+  });
+  chunk_decoded = new Uint8Array(chunkBuffer);
+  return nacl.to_hex(chunk_decoded);
+};
+
 export const initSecret = (): bigint => {
   // Calcuate a 64-bit random integer and subtract 4 bytes
   const seed = BigInt(Math.floor(Math.random() * 2 ** 64)) - BigInt(4);
@@ -250,6 +285,13 @@ export const decrypt = (aes_ciphertext: string, secret: string): string => {
     plaintext = bytes.toString(CryptoJS.enc.Utf8);
   }
   return plaintext;
+};
+
+export const nacl_from_hex = (hex: string): Uint8Array => {
+  if (!nacl || hex.length === 0) {
+    return new Uint8Array();
+  }
+  return nacl.from_hex(hex);
 };
 
 /**
