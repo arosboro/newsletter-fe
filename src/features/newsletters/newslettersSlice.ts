@@ -114,7 +114,6 @@ export const processNewsletterData = (record: NewsletterRecord) => {
     group_symmetric_key: record.data.group_symmetric_key as string,
     individual_private_key: record.data.individual_private_key as string,
   };
-  console.log(data);
   return { ...record, data: data };
 };
 
@@ -183,7 +182,6 @@ export const decryptNewsletterRecords = createAsyncThunk(
         record.data.template_nonce as string,
         group_symmetric_key,
       );
-      console.log(record.data.content, record.data.content_nonce, group_symmetric_key);
       const content: string | null = decryptGroupMessage(
         record.data.content,
         record.data.content_nonce as string,
