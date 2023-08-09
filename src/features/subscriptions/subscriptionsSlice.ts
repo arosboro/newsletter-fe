@@ -4,6 +4,7 @@ import { isNewsletterRecord, NewsletterRecord, processNewsletterData } from '@/f
 import { getMapping } from '@/aleo/rpc';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { decode, decode_u8, decryptGroupMessage, resolve } from '@/lib/util';
+// eslint-disable-next-line import/no-unresolved
 import init, { cantors_pairing } from 'newsletter_worker';
 
 export interface SubscriptionRecord {
