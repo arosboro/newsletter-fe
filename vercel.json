@@ -1,3 +1,3 @@
 {
-    "installcommand": "./install.sh"
+  "installcommand": "./install.sh"
 }
