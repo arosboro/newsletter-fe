@@ -1,4 +1,5 @@
 util/*.js
+newsletter_worker/target
 
 # Logs
 logs

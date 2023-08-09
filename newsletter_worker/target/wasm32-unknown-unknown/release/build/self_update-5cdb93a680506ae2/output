@@ -1,1 +1,0 @@
-cargo:rustc-env=TARGET=wasm32-unknown-unknown

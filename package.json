@@ -61,6 +61,7 @@
     "typescript": "^5.0.2",
     "vite": "^4.4.0",
     "vite-plugin-pwa": "^0.16.4",
-    "vite-plugin-wasm-pack": "^0.1.12"
+    "vite-plugin-wasm-pack": "^0.1.12",
+    "wasm-pack": "^0.12.1"
   }
 }
