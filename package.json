@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "wasm": "wasm-pack build ./newsletter_worker --target web",
-    "dev": "wasm-pack build ./newsletter_worker --target web && vite",
-    "build": "wasm-pack build ./newsletter_worker --target web && tsc && vite build",
+    "dev": "npm run wasm && vite",
+    "build": "npm run wasm && tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite prev1iew",
     "configure-program": "tsc ./util/update-program.ts && node ./util/update-program.js",
