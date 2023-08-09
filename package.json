@@ -3,8 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "wasm": "wasm-pack build ./newsletter_worker --target web",
+    "dev": "npm run wasm && vite",
+    "build": "npm run wasm && tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite prev1iew",
     "configure-program": "tsc ./util/update-program.ts && node ./util/update-program.js",
@@ -23,8 +24,6 @@
     "@uiw/react-md-editor": "^3.23.3",
     "aleo-record-interfaces": "^1.0.7",
     "axios": "^1.4.0",
-    "bcrypt": "^5.1.0",
-    "crypto-js": "^4.1.1",
     "js-nacl": "^1.4.0",
     "json-rpc-2.0": "^1.6.0",
     "react": "^18.2.0",
@@ -33,7 +32,6 @@
     "react-router-dom": "^6.14.1",
     "react-toggle": "^4.1.3",
     "reselect": "^4.1.8",
-    "scrypt-js": "^3.0.1",
     "swr": "^2.2.0"
   },
   "devDependencies": {
@@ -62,6 +60,7 @@
     "process": "^0.11.10",
     "typescript": "^5.0.2",
     "vite": "^4.4.0",
-    "vite-plugin-pwa": "^0.16.4"
+    "vite-plugin-pwa": "^0.16.4",
+    "vite-plugin-wasm-pack": "^0.1.12"
   }
 }

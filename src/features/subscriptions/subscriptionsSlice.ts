@@ -4,6 +4,7 @@ import { isNewsletterRecord, NewsletterRecord, processNewsletterData } from '@/f
 import { getMapping } from '@/aleo/rpc';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { decode, decode_u8, decryptGroupMessage, resolve } from '@/lib/util';
+import init, { cantors_pairing } from 'newsletter_worker';
 
 export interface SubscriptionRecord {
   id: string;
@@ -25,7 +26,8 @@ export interface SharedSecret {
 }
 
 export interface SharedSecretMapping {
-  subscription: SubscriptionRecord;
+  sequence: string;
+  subscription: SubscriptionRecord | undefined;
   newsletter: NewsletterRecord;
   secret: SharedSecret;
 }
@@ -62,43 +64,88 @@ export const isSubscriptionRecord = (
 
 export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupRecords', async (records: Record[]) => {
   const newsletter_records = records.filter((record) => isNewsletterRecord(record)) as NewsletterRecord[];
-  const cleaned_newsletter_records = newsletter_records.map((record) => {
-    return processNewsletterData(record);
-  });
+  // const cleaned_newsletter_records = newsletter_records.map((record) => {
+  //   return processNewsletterData(record);
+  // });
   const subscription_records = records.filter((record) => isSubscriptionRecord(record)) as SubscriptionRecord[];
   const shared_public_keys: SharedSecretMapping[] = [];
-  for (let i = 0; i < subscription_records.length; i++) {
-    const subscription: SubscriptionRecord = processSubscriptionData(subscription_records[i]);
-    const member_secret_idx = `${subscription.data.member_secret_idx}field`;
-    const member_secret: SharedSecret = await getMapping(
-      'https://vm.aleo.org/api',
-      NewsletterProgramId,
-      'member_secrets',
-      member_secret_idx,
-    );
-    const filtered_newsletters: NewsletterRecord[] = cleaned_newsletter_records.filter(
-      (record) => subscription.data.id === record.data.id,
-    );
-    const unique_newsletters: NewsletterRecord[] = [];
-    const seen_ids = new Set();
-    for (let i = 0; i < filtered_newsletters.length; i++) {
-      if (!seen_ids.has(filtered_newsletters[i].data.id)) {
-        seen_ids.add(filtered_newsletters[i].data.id);
-        unique_newsletters.push(filtered_newsletters[i]);
-      }
+  // Determine member_secret_idx manually, relying on the cantors pairing with newsletter.id
+  // and newsletter.member_sequence to determine the member_secret_idx
+  for (let i = 0; i < newsletter_records.length; i++) {
+    // Get all public keys for every iteration of the newsletter.member_sequence related to the
+    // newsletter.id
+    const raw_newsletter: NewsletterRecord = newsletter_records[i];
+    const newsletter: NewsletterRecord = processNewsletterData(raw_newsletter);
+    const newsletter_id = BigInt(newsletter.data.id);
+    const newsletter_member_sequence = newsletter.data.member_sequence;
+    console.log(newsletter_id);
+    console.log(BigInt(newsletter_member_sequence), 'newsletter_member_sequence');
+    for (let j = 1n; j <= BigInt(newsletter_member_sequence); j += 1n) {
+      console.log(j);
+      const current_member_sequence = BigInt(j).toString();
+      console.log(`${newsletter_id}field`, `${current_member_sequence}field`);
+      await init().then(async () => {
+        console.log('init wasm-pack');
+        const member_secret_idx = cantors_pairing(`${newsletter_id}field`, `${current_member_sequence}field`);
+        const member_secret: SharedSecret = await getMapping(
+          'https://vm.aleo.org/api',
+          NewsletterProgramId,
+          'member_secrets',
+          member_secret_idx,
+        );
+        console.log(member_secret);
+        const shared_public_key: SharedSecret = {
+          shared_public_key: decode(member_secret.shared_public_key),
+          recipient: decode(member_secret.recipient),
+        };
+        const subscription = subscription_records.find((record) => {
+          return (
+            BigInt(record.data.member_secret_idx.slice(0, -13)) === BigInt(member_secret_idx.slice(0, -13)) &&
+            BigInt(record.data.member_sequence.slice(0, -13)) === j
+          );
+        });
+        shared_public_keys.push({
+          sequence: j.toString(),
+          subscription: subscription,
+          newsletter: newsletter,
+          secret: shared_public_key,
+        });
+      });
     }
-    const newsletter = unique_newsletters[0];
-    const shared_public_key: SharedSecret = {
-      shared_public_key: decode(member_secret.shared_public_key),
-      recipient: decode(member_secret.recipient),
-    };
-    shared_public_keys.push({ subscription: subscription, newsletter: newsletter, secret: shared_public_key });
   }
+  // for (let i = 0; i < subscription_records.length; i++) {
+  //   const subscription: SubscriptionRecord = processSubscriptionData(subscription_records[i]);
+  //   const member_secret_idx = `${subscription.data.member_secret_idx}field`;
+  //   console.log(member_secret_idx, 'member_secret_idx');
+  //   const member_secret: SharedSecret = await getMapping(
+  //     'https://vm.aleo.org/api',
+  //     NewsletterProgramId,
+  //     'member_secrets',
+  //     member_secret_idx,
+  //   );
+  //   const filtered_newsletters: NewsletterRecord[] = cleaned_newsletter_records.filter(
+  //     (record) => subscription.data.id === record.data.id,
+  //   );
+  //   const unique_newsletters: NewsletterRecord[] = [];
+  //   const seen_ids = new Set();
+  //   for (let i = 0; i < filtered_newsletters.length; i++) {
+  //     if (!seen_ids.has(filtered_newsletters[i].data.id)) {
+  //       seen_ids.add(filtered_newsletters[i].data.id);
+  //       unique_newsletters.push(filtered_newsletters[i]);
+  //     }
+  //   }
+  //   const newsletter = unique_newsletters[0];
+  //   const shared_public_key: SharedSecret = {
+  //     shared_public_key: decode(member_secret.shared_public_key),
+  //     recipient: decode(member_secret.recipient),
+  //   };
+  //   shared_public_keys.push({ subscription: subscription, newsletter: newsletter, secret: shared_public_key });
+  // }
   return shared_public_keys;
 });
 
-export const decryptSubscriptionMappings = createAsyncThunk(
-  'subscriptions/decryptMappings',
+export const fetchSubscriptionMappings = createAsyncThunk(
+  'subscriptions/fetchMappings',
   async (mappings: SharedSecretMapping[]) => {
     const decrypted_mappings: SharedSecretMapping[] = [];
     for (let i = 0; i < mappings.length; i++) {
@@ -153,7 +200,7 @@ const subscriptionsSlice = createSlice({
       .addCase(lookupSubscriptionRecords.fulfilled, (state, action: PayloadAction<SharedSecretMapping[]>) => {
         const newRecords: { [key: string]: SharedSecretMapping } = {};
         action.payload.forEach((map) => {
-          newRecords[map.subscription.id] = map;
+          newRecords[map.sequence] = map;
         });
         state.list = newRecords;
         const keys = Object.keys(state.list);

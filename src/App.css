@@ -14,6 +14,16 @@
   align-items: stretch;
 }
 
+.App-nav-list {
+  max-width: 190px;
+}
+
+.App-nav-list-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .wallet-adapter-button,
 .wallet-adapter-dropdown {
   /* Align it all the way to the right */

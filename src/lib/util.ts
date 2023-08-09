@@ -3,8 +3,8 @@
 
 import axios from 'axios';
 import FormData from 'form-data';
-import CryptoJS from 'crypto-js';
 import nacl_factory from 'js-nacl';
+// import CryptoJS from 'crypto-js';
 
 let nacl: nacl_factory.Nacl;
 
@@ -173,16 +173,26 @@ export async function ipfsAdd(data: string) {
 }
 
 export const format_bigints = (bigints: bigint[]) => {
-  const int_list = bigints.map((bigint) => bigint.toString() + 'u128');
-  let int_str = '{';
-  for (let i = 0; i < int_list.length; i++) {
-    int_str += `b${+i}: ${int_list[i]}`;
-    if (i < int_list.length - 1) {
-      int_str += ', ';
-    }
+  let result = '{ ';
+  for (let i = 0; i < bigints.length; i++) {
+    if (i == bigints.length - 1) result += `b${i}: ${bigints[i]}u128 `;
+    else result += `b${i}: ${bigints[i]}u128, `;
   }
-  int_str += '}';
-  return int_str;
+  result += '}';
+  return result;
+};
+
+export const format_u8s = (u8s: Uint8Array | string) => {
+  if (typeof u8s === 'string') {
+    u8s = nacl_from_hex(u8s);
+  }
+  let result = '{ ';
+  for (let i = 0; i < u8s.length; i++) {
+    if (i == u8s.length - 1) result += `b${i}: ${u8s[i]}u8 `;
+    else result += `b${i}: ${u8s[i]}u8, `;
+  }
+  result += '}';
+  return result;
 };
 
 export async function ipfsRm(hash: string) {
@@ -270,22 +280,22 @@ export const initSecret = (): bigint => {
   return seed;
 };
 
-export const encrypt = (plaintext: string, secret: string): string => {
-  let ciphertext = '';
-  if (typeof plaintext === 'string' && typeof secret === 'string') {
-    ciphertext = CryptoJS.AES.encrypt(plaintext, secret).toString();
-  }
-  return ciphertext;
-};
+// export const encrypt = (plaintext: string, secret: string): string => {
+//   let ciphertext = '';
+//   if (typeof plaintext === 'string' && typeof secret === 'string') {
+//     ciphertext = CryptoJS.AES.encrypt(plaintext, secret).toString();
+//   }
+//   return ciphertext;
+// };
 
-export const decrypt = (aes_ciphertext: string, secret: string): string => {
-  let plaintext = '';
-  if (typeof aes_ciphertext === 'string' && typeof secret === 'string') {
-    const bytes = CryptoJS.AES.decrypt(aes_ciphertext, secret);
-    plaintext = bytes.toString(CryptoJS.enc.Utf8);
-  }
-  return plaintext;
-};
+// export const decrypt = (aes_ciphertext: string, secret: string): string => {
+//   let plaintext = '';
+//   if (typeof aes_ciphertext === 'string' && typeof secret === 'string') {
+//     const bytes = CryptoJS.AES.decrypt(aes_ciphertext, secret);
+//     plaintext = bytes.toString(CryptoJS.enc.Utf8);
+//   }
+//   return plaintext;
+// };
 
 export const nacl_from_hex = (hex: string): Uint8Array => {
   if (!nacl || hex.length === 0) {
@@ -403,3 +413,35 @@ export const resolve = async (path: string) => {
   });
   return cipher_text;
 };
+
+export const truncateAddress = (recipient: string): string => {
+  if (recipient.length <= 8) {
+    return recipient; // No need to truncate if length is 8 or less
+  }
+
+  const truncatedRecipient = recipient.substring(0, 4) + '...' + recipient.substring(recipient.length - 4);
+  return truncatedRecipient;
+};
+
+// /**
+//  * Implement Cantor's pairing with wrapping at 251 bits of each operation.
+//  * @param { bigint } a - The first number to be paired.
+//  * @param { bigint } b - The second number to be paired.
+//  * @returns { bigint } - The result of the pairing.
+//  * @see https://en.wikipedia.org/wiki/Pairing_function#Cantor_pairing_function
+//  */
+// export const cantors_pairing = (a_int: bigint, b_int: bigint): bigint => {
+//   // +, * and / are all wrapping operations with overflow at 251 bits.
+//   // this would be const c = ((a + b) * (a + b + 1n)) / 2n + b;
+//   // in standard typescript, but typescript operations do not wrap at 251 bits.
+//   // emulate this behavior to define constant c:
+//   const a = BigInt.asUintN(251, a_int);
+//   const b = BigInt.asUintN(251, b_int);
+//   const a_plus_b = BigInt.asUintN(251, a + b);
+//   const a_plus_b_plus_1 = BigInt.asUintN(251, a_plus_b + 1n);
+//   const a_plus_b_times_a_plus_b_plus_1 = BigInt.asUintN(251, a_plus_b * a_plus_b_plus_1);
+//   const a_plus_b_times_a_plus_b_plus_1_div_2 = BigInt.asUintN(251, a_plus_b_times_a_plus_b_plus_1 / 2n);
+//   const c = BigInt.asUintN(251, a_plus_b_times_a_plus_b_plus_1_div_2 + b);
+
+//   return c;
+// };

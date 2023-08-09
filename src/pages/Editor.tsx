@@ -8,7 +8,15 @@ import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from '@dem
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
-import { padArray, splitStringToBigInts, ipfsAdd, encrypt, ipfsRm, format_bigints, nacl_from_hex } from '@/lib/util';
+import {
+  padArray,
+  splitStringToBigInts,
+  ipfsAdd,
+  ipfsRm,
+  format_bigints,
+  format_u8s,
+  encryptGroupMessage,
+} from '@/lib/util';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
 import {
@@ -33,6 +41,9 @@ import {
   NewsletterRecord,
   selectNewsletter,
   selectIndividualPublicKey,
+  selectRecipients,
+  selectRawNewsletter,
+  draftSelectedRecipients,
 } from '@/features/newsletters/newslettersSlice';
 import 'react-toggle/style.css';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
@@ -55,6 +66,8 @@ const Editor: FC = () => {
   const individual_private_key: string = useSelector(selectIndividualPrivateKey);
   const individual_public_key: string = useSelector(selectIndividualPublicKey);
   const newsletter: NewsletterRecord = useSelector(selectNewsletter);
+  const selected_recipients = useSelector(selectRecipients);
+  const record = useSelector(selectRawNewsletter);
   const dispatch = useDispatch<AppDispatch>();
 
   // Long assignment of a template string to a variable
@@ -107,29 +120,6 @@ const Editor: FC = () => {
     // Desired format is a string of the form:
     // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
 
-    const format_bigints = (bigints: bigint[]) => {
-      let result = '{ ';
-      for (let i = 0; i < bigints.length; i++) {
-        if (i == bigints.length - 1) result += `b${i}: ${bigints[i]}u128 `;
-        else result += `b${i}: ${bigints[i]}u128, `;
-      }
-      result += '}';
-      return result;
-    };
-
-    const format_u8s = (u8s: Uint8Array | string) => {
-      if (typeof u8s === 'string') {
-        u8s = nacl_from_hex(u8s);
-      }
-      let result = '{ ';
-      for (let i = 0; i < u8s.length; i++) {
-        if (i == u8s.length - 1) result += `b${i}: ${u8s[i]}u8 `;
-        else result += `b${i}: ${u8s[i]}u8, `;
-      }
-      result += '}';
-      return result;
-    };
-
     // The record here is an output from the Requesting Records above
     const inputs = [
       `${format_bigints(title_bigints)}`,
@@ -168,7 +158,7 @@ const Editor: FC = () => {
     }
   };
 
-  const handleCreateNewsletterIssue = async (event: ChangeEvent<HTMLFormElement>) => {
+  const handleUpdateNewsletter = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();
 
@@ -180,37 +170,73 @@ const Editor: FC = () => {
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const template_bigints = padArray(splitStringToBigInts(template_address.Hash), 4);
     const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
-    const group_symmetric_key_bigint = padArray([BigInt(group_symmetric_key)], 1);
-    const individual_private_key_bigint = padArray([BigInt(individual_private_key)], 1);
-    const shared_public_key_bigints = padArray(splitStringToBigInts(shared_public_key), 4);
-    const shared_recipient_bigints = padArray(splitStringToBigInts(shared_recipient), 7);
 
-    // Desired format is a string of the form:
-    // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
-
-    // The record here is an output from the Requesting Records above
     const inputs = [
+      record,
       `${format_bigints(title_bigints)}`,
+      `${format_u8s(title_nonce)}`,
       `${format_bigints(template_bigints)}`,
+      `${format_u8s(template_nonce)}`,
       `${format_bigints(content_bigints)}`,
-      `${format_bigints(group_symmetric_key_bigint)}`,
-      `${format_bigints(individual_private_key_bigint)}`,
-      `${format_bigints(shared_public_key_bigints)}`,
-      `${format_bigints(shared_recipient_bigints)}`,
+      `${format_u8s(content_nonce)}`,
     ];
 
     const fee_value: number = parseFloat(fee) || 1.0;
 
     const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
 
-    const test1 = encrypt('13509774859604697084', '11708986043611107324');
-    console.log(test1, 'shared_public_key');
-    const test2 = encrypt('aleo1rzhda63qd45uwg46qtf4ahv5zpuap5s9u8qdtlks7239hghckg8qhvqcgu', '11708986043611107324');
-    console.log(test2, 'shared_recipient');
-    const test1_bigints = padArray(splitStringToBigInts(test1), 4);
-    const test2_bigints = padArray(splitStringToBigInts(test2), 7);
-    console.log(`${format_bigints(test1_bigints)}`);
-    console.log(`${format_bigints(test2_bigints)}`);
+    const aleoTransaction = Transaction.createTransaction(
+      publicKey,
+      WalletAdapterNetwork.Testnet,
+      NewsletterProgramId,
+      'update',
+      inputs,
+      fee_microcredits,
+    );
+
+    try {
+      if (requestTransaction) {
+        // Returns a transaction Id, that can be used to check the status. Note this is not the on-chain transaction id
+        const txId = (await requestTransaction(aleoTransaction)) || '';
+        setTransactionId(txId);
+      }
+    } catch (e: any) {
+      console.log(aleoTransaction, 'Transaction Failed');
+    }
+  };
+
+  const handleCreateNewsletterIssue = async (event: ChangeEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!publicKey) throw new WalletNotConnectedError();
+
+    // Make immutable hash of the string values.
+    const title_address = await ipfsAdd(title_ciphertext.ciphertext);
+    const content_address = await ipfsAdd(content_ciphertext.ciphertext);
+    dispatch(draftSelectedRecipients());
+    const issue_cipher = encryptGroupMessage(JSON.stringify(selected_recipients), group_symmetric_key);
+    const issue_address = await ipfsAdd(issue_cipher.ciphertext);
+
+    const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
+    const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
+    const issue_bigints = padArray(splitStringToBigInts(issue_address.Hash), 4);
+
+    // Desired format is a string of the form:
+    // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
+
+    // The record here is an output from the Requesting Records above
+    const inputs = [
+      record,
+      `${format_bigints(title_bigints)}`,
+      `${format_u8s(title_nonce)}`,
+      `${format_bigints(content_bigints)}`,
+      `${format_u8s(content_nonce)}`,
+      `${format_bigints(issue_bigints)}`,
+      `${format_u8s(issue_cipher.nonce)}`,
+    ];
+
+    const fee_value: number = parseFloat(fee) || 1.0;
+
+    const fee_microcredits = 1_000_000 * fee_value; // This will fail if fee is not set high enough
 
     const aleoTransaction = Transaction.createTransaction(
       publicKey,
@@ -230,19 +256,31 @@ const Editor: FC = () => {
     } catch (e: any) {
       console.log(aleoTransaction, 'Transaction Failed');
       ipfsRm(title_address);
-      ipfsRm(template_address);
       ipfsRm(content_address);
+      ipfsRm(issue_address);
     }
   };
 
   const getTransactionStatus = async (txId: string) => {
     const wallet_status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
     setStatus(wallet_status);
-    console.log(status);
     if (status === 'Finalized') {
       setStatus(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
     }
+  };
+
+  const actionLabel =
+    newsletter && newsletter.id && !selected_recipients.length
+      ? 'Update'
+      : newsletter && newsletter.id && selected_recipients.length
+      ? 'Deliver Issue'
+      : 'Create';
+
+  const action = {
+    Create: handleCreateNewsletter,
+    Update: handleUpdateNewsletter,
+    'Deliver Issue': handleCreateNewsletterIssue,
   };
 
   return (
@@ -282,10 +320,7 @@ const Editor: FC = () => {
             </label>
           )}
         </div>
-        <form
-          className="App-body-form"
-          onSubmit={newsletter && newsletter.id ? handleCreateNewsletterIssue : handleCreateNewsletter}
-        >
+        <form className="App-body-form" onSubmit={action[actionLabel]}>
           <MDEditor
             className="App-body-editor"
             height={'54vh'}
@@ -305,7 +340,13 @@ const Editor: FC = () => {
                   <div>{`Transaction status: ${status}`}</div>
                 </div>
               )}
-              <input type="submit" disabled={!publicKey || !shared_public_key || !shared_recipient} value="Submit" />
+              <input
+                type="submit"
+                disabled={
+                  !publicKey || (actionLabel === 'Create' && (!shared_public_key || !shared_recipient)) || privacy_mode
+                }
+                value={actionLabel}
+              />
             </div>
           )}
         </form>

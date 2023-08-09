@@ -1,0 +1,9 @@
+/Users/arosboro/git/newsletter-fe/worker/target/debug/deps/web_sys-d4e5c0c48c1c4a82.rmeta: /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/lib.rs /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/mod.rs /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_EventTarget.rs /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_XmlHttpRequest.rs /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_XmlHttpRequestEventTarget.rs
+
+/Users/arosboro/git/newsletter-fe/worker/target/debug/deps/web_sys-d4e5c0c48c1c4a82.d: /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/lib.rs /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/mod.rs /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_EventTarget.rs /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_XmlHttpRequest.rs /Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_XmlHttpRequestEventTarget.rs
+
+/Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/lib.rs:
+/Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/mod.rs:
+/Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_EventTarget.rs:
+/Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_XmlHttpRequest.rs:
+/Users/arosboro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/web-sys-0.3.64/src/features/gen_XmlHttpRequestEventTarget.rs:

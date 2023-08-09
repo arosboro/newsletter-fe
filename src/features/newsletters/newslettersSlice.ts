@@ -6,6 +6,7 @@ import {
   decode_u8,
   decryptGroupMessage,
   encryptGroupMessage,
+  encryptMessage,
   generateGroupSymmetricKey,
   generateKeyPair,
   HexCipher,
@@ -34,6 +35,14 @@ export interface NewsletterRecord {
     group_symmetric_key: string[] | string;
     individual_private_key: string[] | string;
   };
+}
+
+export interface DeliveryDraft {
+  recipient: string;
+  shared_public_key: string;
+  title: HexCipher | null;
+  template: HexCipher | null;
+  content: HexCipher | null;
 }
 
 interface ExampleDraft {
@@ -68,6 +77,7 @@ export type NewsletterState = {
   group_symmetric_key: string;
   individual_private_key: string;
   individual_public_key: string;
+  selected_recipients: DeliveryDraft[];
   status: 'uninitialized' | 'loading' | 'idle';
   error: string | undefined;
 };
@@ -98,6 +108,7 @@ const initialState: NewsletterState = {
   group_symmetric_key: '',
   individual_private_key: '',
   individual_public_key: '',
+  selected_recipients: [],
   status: 'uninitialized',
   error: undefined,
 };
@@ -273,6 +284,7 @@ const newslettersSlice = createSlice({
         state.individual_private_key = individual_key_pair.privateKey;
         state.individual_public_key = individual_key_pair.publicKey;
       }
+      state.selected_recipients = [];
     },
     initDraft: (state) => {
       const individual_key_pair = generateKeyPair();
@@ -287,6 +299,7 @@ const newslettersSlice = createSlice({
       state.title_ciphertext = {} as HexCipher;
       state.template_ciphertext = {} as HexCipher;
       state.content_ciphertext = {} as HexCipher;
+      state.selected_recipients = [];
     },
     setTitle: (state, action: PayloadAction<string>) => {
       if (!state.privacy_mode) {
@@ -338,6 +351,26 @@ const newslettersSlice = createSlice({
         state.content_ciphertext = encryptGroupMessage(action.payload, state.group_symmetric_key);
         state.content_nonce = state.content_ciphertext.nonce;
       }
+    },
+    setSelectedRecipients: (state, action: PayloadAction<DeliveryDraft[]>) => {
+      state.selected_recipients = action.payload;
+    },
+    draftSelectedRecipients: (state) => {
+      const new_drafts: DeliveryDraft[] = [];
+      state.selected_recipients.forEach((recipient: DeliveryDraft) => {
+        const shared_public_key = recipient.shared_public_key;
+        const title = encryptMessage(state.title as string, state.individual_private_key, shared_public_key);
+        const template = encryptMessage(state.template as string, state.individual_private_key, shared_public_key);
+        const content = encryptMessage(state.content as string, state.individual_private_key, shared_public_key);
+        const draft = {
+          ...recipient,
+          title,
+          template,
+          content,
+        };
+        new_drafts.push(draft);
+      });
+      state.selected_recipients = new_drafts;
     },
   },
   extraReducers: (builder) => {
@@ -417,8 +450,17 @@ const newslettersSlice = createSlice({
   },
 });
 
-export const { toggleTemplateMode, togglePrivacyMode, setNewsletter, initDraft, setTitle, setTemplate, setContent } =
-  newslettersSlice.actions;
+export const {
+  toggleTemplateMode,
+  togglePrivacyMode,
+  setNewsletter,
+  initDraft,
+  setTitle,
+  setTemplate,
+  setContent,
+  setSelectedRecipients,
+  draftSelectedRecipients,
+} = newslettersSlice.actions;
 
 const selectNewsletterList = (state: { newsletters: NewsletterState }) => state.newsletters.list;
 
@@ -487,5 +529,7 @@ export const selectIndividualPrivateKey = (state: { newsletters: NewsletterState
 
 export const selectIndividualPublicKey = (state: { newsletters: NewsletterState }) =>
   state.newsletters.individual_public_key;
+
+export const selectRecipients = (state: { newsletters: NewsletterState }) => state.newsletters.selected_recipients;
 
 export default newslettersSlice.reducer;

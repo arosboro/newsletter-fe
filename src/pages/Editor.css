@@ -68,6 +68,14 @@
   transition: border-color 0.25s;
 }
 
+.App-nav-list-item {
+  list-style: none;
+}
+
+.App-nav-list-item > label {
+  padding: 0;
+}
+
 .send-invite {
   margin-top: 1rem;
   height: 3.25rem;

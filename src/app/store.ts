@@ -7,7 +7,7 @@ import newslettersReducer, {
 } from '@/features/newsletters/newslettersSlice';
 import subscriptionsReducer, {
   lookupSubscriptionRecords,
-  decryptSubscriptionMappings,
+  fetchSubscriptionMappings,
 } from '@/features/subscriptions/subscriptionsSlice';
 
 const loggerMiddleware = (storeAPI: MiddlewareAPI) => (next: Dispatch<AnyAction>) => (action) => {
@@ -32,7 +32,7 @@ const subscriptionMiddleware = (storeAPI: any) => (next: Dispatch<AnyAction>) =>
     storeAPI.dispatch(lookupSubscriptionRecords(action.payload));
   }
   if (lookupSubscriptionRecords.fulfilled.match(action)) {
-    storeAPI.dispatch(decryptSubscriptionMappings(action.payload));
+    storeAPI.dispatch(fetchSubscriptionMappings(action.payload));
   }
   return next(action);
 };
