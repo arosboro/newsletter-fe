@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "wasm": "cd ./newsletter_worker && ~/.cargo/bin/wasm-pack build --target web",
+    "wasm": "cd ./newsletter_worker && wasm-pack build --target web",
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
