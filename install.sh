@@ -6,7 +6,7 @@ echo "Installing wasm-pack..."
 # Determine your Rust version
 RUST_VERSION="1.33.0"
 # Download the correct Wasm32 target
-wget "https://static.rust-lang.org/dist/rust-std-$RUST_VERSION-wasm32-unknown-unknown.tar.gz"
+curl -O "https://static.rust-lang.org/dist/rust-std-$RUST_VERSION-wasm32-unknown-unknown.tar.gz"
 # Unpack the tarball
 tar -xzvf "rust-std-$RUST_VERSION-wasm32-unknown-unknown.tar.gz"
 # Move the wasm32-unknown-unknown folder to the sysroot
