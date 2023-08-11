@@ -11,7 +11,7 @@
     "configure-program": "tsc ./util/update-program.ts && node ./util/update-program.js",
     "build-program": "cd ./aleo/newsletter && leo build",
     "copy-program": "tsc ./util/copy-program.ts && node ./util/copy-program.js",
-    "program": "yarn run configure-program && yarn run build-program && yarn run copy-program"
+    "program": "npm run configure-program && npm run build-program && npm run copy-program"
   },
   "dependencies": {
     "@demox-labs/aleo-wallet-adapter-base": "^0.0.15",
