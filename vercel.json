@@ -1,3 +1,4 @@
 {
-    "installcommand": "./install.sh"
+  "installCommand": "./install.sh",
+  "buildCommand": "npm run build"
 }

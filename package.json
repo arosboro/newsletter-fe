@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "wasm": "cd ./newsletter_worker && ~/.cargo/bin/wasm-pack build --target web",
+    "wasm": "cd ./newsletter_worker && wasm-pack build --target web",
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -59,7 +59,7 @@
     "prettier": "^3.0.0",
     "process": "^0.11.10",
     "typescript": "^5.0.2",
-    "vite": "^4.4.0",
+    "vite": "^4.4.9",
     "vite-plugin-pwa": "^0.16.4",
     "vite-plugin-wasm-pack": "^0.1.12",
     "wasm-pack": "^0.12.1"
