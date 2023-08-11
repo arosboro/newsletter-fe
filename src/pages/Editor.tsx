@@ -219,6 +219,7 @@ const Editor: FC = () => {
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
     const issue_bigints = padArray(splitStringToBigInts(issue_address.Hash), 4);
+    const issue_nonce_bigints = padArray(splitStringToBigInts(issue_cipher.nonce), 4);
 
     // Desired format is a string of the form:
     // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
@@ -231,7 +232,7 @@ const Editor: FC = () => {
       `${format_bigints(content_bigints)}`,
       `${format_u8s(content_nonce)}`,
       `${format_bigints(issue_bigints)}`,
-      `${format_u8s(issue_cipher.nonce)}`,
+      `${format_bigints(issue_nonce_bigints)}`,
     ];
 
     const fee_value: number = parseFloat(fee) || 1.0;
@@ -242,7 +243,7 @@ const Editor: FC = () => {
       publicKey,
       WalletAdapterNetwork.Testnet,
       NewsletterProgramId,
-      'main',
+      'deliver',
       inputs,
       fee_microcredits,
     );
@@ -255,9 +256,9 @@ const Editor: FC = () => {
       }
     } catch (e: any) {
       console.log(aleoTransaction, 'Transaction Failed');
-      ipfsRm(title_address);
-      ipfsRm(content_address);
-      ipfsRm(issue_address);
+      ipfsRm(title_address.Hash);
+      ipfsRm(content_address.Hash);
+      ipfsRm(issue_address.Hash);
     }
   };
 
