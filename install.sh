@@ -5,3 +5,4 @@ source "$HOME/.cargo/env"
 echo "Installing wasm-pack..."
 cargo install wasm-pack
 npm install
+npm run wasm
