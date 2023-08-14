@@ -43,6 +43,14 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* center on window */
+/* It is in a container of a flex layout, currently centering on that */
+.spinner {
+  position: absolute;
+  top: calc(50vh - 75px);
+  left: calc(50vw - 75px);
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

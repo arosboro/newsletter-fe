@@ -103,6 +103,7 @@ const Reader: FC = () => {
     setStatus(status);
     if (status === 'Finalized') {
       setStatus(undefined);
+      setTransactionId(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
     }
   };

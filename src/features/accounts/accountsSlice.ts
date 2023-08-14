@@ -23,4 +23,6 @@ export const { setPublicKey } = accountsSlice.actions;
 
 export const selectPublicKey = (state: { accounts: AccountState }) => state.accounts.publicKey;
 
+export const selectIsLoading = (state: { accounts: AccountState }) => state.accounts.status === 'loading';
+
 export default accountsSlice.reducer;
