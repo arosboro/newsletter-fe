@@ -67,9 +67,13 @@ export async function getMapping(
 ): Promise<any> {
   const mappingUrl = `${apiUrl}/testnet3/program/${programId}/mapping`;
   const response = await axios.get(`${mappingUrl}/${mappingName}/${mappingKey}`);
-  const mapping: string = response.data.replace(/(\d+)u128/g, '"$1u128"').replace(/(\w+):/g, '"$1":');
+  if (!response.data) {
+    console.log('Mapping not found');
+  } else {
+    const mapping: string = response.data.replace(/(\d+)u128/g, '"$1u128"').replace(/(\w+):/g, '"$1":');
 
-  return JSON.parse(mapping);
+    return mapping;
+  }
 }
 
 export const getClient = (apiUrl: string) => {

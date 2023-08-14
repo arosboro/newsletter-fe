@@ -16,6 +16,7 @@ import {
   format_bigints,
   format_u8s,
   encryptGroupMessage,
+  decryptGroupMessage,
 } from '@/lib/util';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
@@ -212,9 +213,13 @@ const Editor: FC = () => {
     // Make immutable hash of the string values.
     const title_address = await ipfsAdd(title_ciphertext.ciphertext);
     const content_address = await ipfsAdd(content_ciphertext.ciphertext);
-    dispatch(draftSelectedRecipients());
     const issue_cipher = encryptGroupMessage(JSON.stringify(selected_recipients), group_symmetric_key);
     const issue_address = await ipfsAdd(issue_cipher.ciphertext);
+
+    const ciphertext = issue_cipher.ciphertext as string;
+    const nonce = issue_cipher.nonce as string;
+    const decrypted_issue = JSON.parse(decryptGroupMessage(ciphertext, nonce, group_symmetric_key) as string);
+    console.log(decrypted_issue);
 
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
@@ -267,6 +272,7 @@ const Editor: FC = () => {
     setStatus(wallet_status);
     if (status === 'Finalized') {
       setStatus(undefined);
+      setTransactionId(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
     }
   };
@@ -281,7 +287,10 @@ const Editor: FC = () => {
   const action = {
     Create: handleCreateNewsletter,
     Update: handleUpdateNewsletter,
-    'Deliver Issue': handleCreateNewsletterIssue,
+    'Deliver Issue': (event: ChangeEvent<HTMLFormElement>) => {
+      dispatch(draftSelectedRecipients());
+      return handleCreateNewsletterIssue(event);
+    },
   };
 
   return (
