@@ -29,7 +29,6 @@ export interface NewsletterRecord {
     id: string;
     op: string;
     member_sequence: string;
-    issue_sequence: string;
     base: string | boolean;
     revision: string | boolean;
     template: string[] | string | null;
@@ -137,7 +136,6 @@ export const processNewsletterData = (record: NewsletterRecord) => {
     id: BigInt((record.data.id as string).slice(0, -13)).toString(),
     op: (record.data.op as string).slice(0, -8),
     member_sequence: BigInt((record.data.member_sequence as string).slice(0, -13)).toString(),
-    issue_sequence: BigInt((record.data.issue_sequence as string).slice(0, -13)).toString(),
     base: (record.data.base as string).slice(0, -8) === 'true',
     revision: (record.data.revision as string).slice(0, -8) === 'true',
     group_symmetric_key: record.data.group_symmetric_key as string,
@@ -245,7 +243,7 @@ export const fetchIssues = async (record: NewsletterRecord): Promise<SharedIssue
     const issue_sequence = BigInt(issue_sequence_field.slice(0, -5));
     // Fetch the issues of the newsletter one time:
     for (let j = 1n; j < BigInt(issue_sequence); j += 1n) {
-      const current_issue_sequence = BigInt(j + 1n).toString();
+      const current_issue_sequence = BigInt(j).toString();
       const issue_idx: string = cantors_pairing(`${newsletter_id_field}`, `${current_issue_sequence}field`);
       const issue_json = await getMapping(
         'https://vm.aleo.org/api',
