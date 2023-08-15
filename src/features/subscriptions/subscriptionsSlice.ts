@@ -80,69 +80,38 @@ export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupR
     const newsletter: NewsletterRecord = processNewsletterData(raw_newsletter);
     const newsletter_id = BigInt(newsletter.data.id);
     const newsletter_member_sequence = newsletter.data.member_sequence;
-    console.log(newsletter_id);
-    console.log(BigInt(newsletter_member_sequence), 'newsletter_member_sequence');
     for (let j = 1n; j <= BigInt(newsletter_member_sequence); j += 1n) {
-      console.log(j);
       const current_member_sequence = BigInt(j).toString();
-      console.log(`${newsletter_id}field`, `${current_member_sequence}field`);
       await init().then(async () => {
-        console.log('init wasm-pack');
         const member_secret_idx = cantors_pairing(`${newsletter_id}field`, `${current_member_sequence}field`);
-        const member_secret: SharedSecret = await getMapping(
+        const member_secret_json: string = await getMapping(
           'https://vm.aleo.org/api',
           NewsletterProgramId,
           'member_secrets',
           member_secret_idx,
         );
-        console.log(member_secret);
-        const shared_public_key: SharedSecret = {
-          shared_public_key: decode(member_secret.shared_public_key),
-          recipient: decode(member_secret.recipient),
-        };
-        const subscription = subscription_records.find((record) => {
-          return (
-            BigInt(record.data.member_secret_idx.slice(0, -13)) === BigInt(member_secret_idx.slice(0, -13)) &&
-            BigInt(record.data.member_sequence.slice(0, -13)) === j
-          );
-        });
-        shared_public_keys.push({
-          sequence: j.toString(),
-          subscription: subscription,
-          newsletter: newsletter,
-          secret: shared_public_key,
-        });
+        if (member_secret_json && member_secret_json !== 'null') {
+          const member_secret: SharedSecret = JSON.parse(member_secret_json);
+          const shared_public_key: SharedSecret = {
+            shared_public_key: decode(member_secret.shared_public_key),
+            recipient: decode(member_secret.recipient),
+          };
+          const subscription = subscription_records.find((record) => {
+            return (
+              BigInt(record.data.member_secret_idx.slice(0, -13)) === BigInt(member_secret_idx.slice(0, -13)) &&
+              BigInt(record.data.member_sequence.slice(0, -13)) === j
+            );
+          });
+          shared_public_keys.push({
+            sequence: j.toString(),
+            subscription: subscription,
+            newsletter: newsletter,
+            secret: shared_public_key,
+          });
+        }
       });
     }
   }
-  // for (let i = 0; i < subscription_records.length; i++) {
-  //   const subscription: SubscriptionRecord = processSubscriptionData(subscription_records[i]);
-  //   const member_secret_idx = `${subscription.data.member_secret_idx}field`;
-  //   console.log(member_secret_idx, 'member_secret_idx');
-  //   const member_secret: SharedSecret = await getMapping(
-  //     'https://vm.aleo.org/api',
-  //     NewsletterProgramId,
-  //     'member_secrets',
-  //     member_secret_idx,
-  //   );
-  //   const filtered_newsletters: NewsletterRecord[] = cleaned_newsletter_records.filter(
-  //     (record) => subscription.data.id === record.data.id,
-  //   );
-  //   const unique_newsletters: NewsletterRecord[] = [];
-  //   const seen_ids = new Set();
-  //   for (let i = 0; i < filtered_newsletters.length; i++) {
-  //     if (!seen_ids.has(filtered_newsletters[i].data.id)) {
-  //       seen_ids.add(filtered_newsletters[i].data.id);
-  //       unique_newsletters.push(filtered_newsletters[i]);
-  //     }
-  //   }
-  //   const newsletter = unique_newsletters[0];
-  //   const shared_public_key: SharedSecret = {
-  //     shared_public_key: decode(member_secret.shared_public_key),
-  //     recipient: decode(member_secret.recipient),
-  //   };
-  //   shared_public_keys.push({ subscription: subscription, newsletter: newsletter, secret: shared_public_key });
-  // }
   return shared_public_keys;
 });
 
@@ -228,11 +197,15 @@ const subscriptionsSlice = createSlice({
 
 const selectSubscriptionsList = (state: { subscriptions: SubscriptionState }) => state.subscriptions.list;
 
+export const selectIsLoading = (state: { subscriptions: SubscriptionState }) =>
+  state.subscriptions.status === 'loading';
+
 export const selectUnspentSubscriptions = createSelector(selectSubscriptionsList, (subscription_list) => {
   return Object.values(subscription_list).filter((record) => !record.newsletter.spent);
 });
 
-export const selectNewsletterSubscribers = (state: { subscriptions: SubscriptionState }) =>
-  state.subscriptions.newsletter_list;
+export const selectNewsletterSubscribers = (state: { subscriptions: SubscriptionState }) => {
+  return state.subscriptions.newsletter_list;
+};
 
 export default subscriptionsSlice.reducer;

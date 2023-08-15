@@ -5,11 +5,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   NewsletterRecord,
   selectUnspentInvites,
-  selectIsLoading,
   selectIssues,
   selectNewsletter,
   setNewsletter,
+  setContent,
+  setTitle,
+  setTemplate,
+  DeliveryDraft,
+  selectUnspentNewsletters,
 } from '@/features/newsletters/newslettersSlice';
+import { SubscriberList, selectNewsletterSubscribers } from '@/features/subscriptions/subscriptionsSlice';
 // import { SharedSecretMapping, selectUnspentSubscriptions } from '@/features/subscriptions/subscriptionsSlice';
 
 // interface Props {
@@ -24,11 +29,11 @@ import {
 
 const ReaderToolbar: FC = () => {
   const { connected } = useWallet();
-  const isLoading: boolean = useSelector(selectIsLoading);
   const invites = useSelector(selectUnspentInvites);
-  const issues: NewsletterRecord[] = useSelector(selectIssues);
+  const issues: DeliveryDraft[] = useSelector(selectIssues);
+  const newsletters: NewsletterRecord[] = useSelector(selectUnspentNewsletters);
   const newsletter: NewsletterRecord = useSelector(selectNewsletter);
-  // const subscriptions: SharedSecretMapping[] = useSelector(selectUnspentSubscriptions);
+  const subscribers: SubscriberList = useSelector(selectNewsletterSubscribers);
   const dispatch = useDispatch<AppDispatch>();
 
   // const handleUnsub = async (value: NewsletterRecord) => {
@@ -49,7 +54,7 @@ const ReaderToolbar: FC = () => {
       <input className="App-nav-input" placeholder="Filter" />
       <hr />
       {newsletter && !newsletter.id && <i>Draft Preview</i>}
-      {connected && !isLoading && (
+      {connected && (
         <>
           {invites.length >= 1 && (
             <>
@@ -61,7 +66,7 @@ const ReaderToolbar: FC = () => {
                       href="/#"
                       onClick={(e) => {
                         e.preventDefault();
-                        dispatch(setNewsletter(value));
+                        dispatch(setNewsletter({ newsletter: value, subscribers: subscribers }));
                       }}
                       className="App-nav-list-item-link"
                     >
@@ -85,18 +90,17 @@ const ReaderToolbar: FC = () => {
               <hr />
             </>
           )}
-
-          {issues.length >= 1 && (
+          {connected && (
             <>
               <h4>Newsletters</h4>
               <ul className="App-nav-list">
-                {issues.map((value: NewsletterRecord, index: number) => (
-                  <li className={value.id + ' App-nav-list-item'} key={index}>
+                {newsletters.map((value: NewsletterRecord, index: number) => (
+                  <li className="App-nav-list-item" key={index}>
                     <a
                       href="/#"
                       onClick={(e) => {
                         e.preventDefault();
-                        dispatch(setNewsletter(value));
+                        dispatch(setNewsletter({ newsletter: value, subscribers: subscribers }));
                       }}
                       className="App-nav-list-item-link"
                     >
@@ -111,7 +115,27 @@ const ReaderToolbar: FC = () => {
               {newsletter && newsletter.id && (
                 <>
                   <hr />
-                  <h4>Subscribers</h4>
+                  <h4>Issues</h4>
+                  <ul className="App-nav-list">
+                    {issues &&
+                      issues.length >= 1 &&
+                      issues.map((value: DeliveryDraft, index: number) => (
+                        <li className={'App-nav-list-item'} key={index}>
+                          <a
+                            href="/#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              dispatch(setTitle(value.title as string));
+                              dispatch(setContent(value.content as string));
+                              dispatch(setTemplate(value.template as string));
+                            }}
+                            className="App-nav-list-item-link"
+                          >
+                            {(index + ' - ' + value.title) as string}
+                          </a>
+                        </li>
+                      ))}
+                  </ul>
                 </>
               )}
             </>

@@ -1,6 +1,5 @@
 import React, { ChangeEvent, FC, useEffect } from 'react';
 import Toggle from 'react-toggle';
-import MDEditor from '@uiw/react-md-editor';
 import EditorToolbar from '@/components/EditorToolbar';
 import './Editor.css';
 import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
@@ -16,6 +15,7 @@ import {
   format_bigints,
   format_u8s,
   encryptGroupMessage,
+  decryptGroupMessage,
 } from '@/lib/util';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
@@ -48,6 +48,9 @@ import {
 import 'react-toggle/style.css';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
 import { fetchRecords } from '@/features/records/recordsSlice';
+import dynamic from 'next/dynamic';
+
+const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 const Editor: FC = () => {
   const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();
@@ -212,13 +215,18 @@ const Editor: FC = () => {
     // Make immutable hash of the string values.
     const title_address = await ipfsAdd(title_ciphertext.ciphertext);
     const content_address = await ipfsAdd(content_ciphertext.ciphertext);
-    dispatch(draftSelectedRecipients());
     const issue_cipher = encryptGroupMessage(JSON.stringify(selected_recipients), group_symmetric_key);
     const issue_address = await ipfsAdd(issue_cipher.ciphertext);
+
+    const ciphertext = issue_cipher.ciphertext as string;
+    const nonce = issue_cipher.nonce as string;
+    const decrypted_issue = JSON.parse(decryptGroupMessage(ciphertext, nonce, group_symmetric_key) as string);
+    console.log(decrypted_issue);
 
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
     const content_bigints = padArray(splitStringToBigInts(content_address.Hash), 4);
     const issue_bigints = padArray(splitStringToBigInts(issue_address.Hash), 4);
+    const issue_nonce_bigints = padArray(splitStringToBigInts(issue_cipher.nonce), 4);
 
     // Desired format is a string of the form:
     // `{ b0: ${bigint[0]}u128, b1: ${bigint[1]}u128, ... }`
@@ -231,7 +239,7 @@ const Editor: FC = () => {
       `${format_bigints(content_bigints)}`,
       `${format_u8s(content_nonce)}`,
       `${format_bigints(issue_bigints)}`,
-      `${format_u8s(issue_cipher.nonce)}`,
+      `${format_bigints(issue_nonce_bigints)}`,
     ];
 
     const fee_value: number = parseFloat(fee) || 1.0;
@@ -242,7 +250,7 @@ const Editor: FC = () => {
       publicKey,
       WalletAdapterNetwork.Testnet,
       NewsletterProgramId,
-      'main',
+      'deliver',
       inputs,
       fee_microcredits,
     );
@@ -255,9 +263,9 @@ const Editor: FC = () => {
       }
     } catch (e: any) {
       console.log(aleoTransaction, 'Transaction Failed');
-      ipfsRm(title_address);
-      ipfsRm(content_address);
-      ipfsRm(issue_address);
+      ipfsRm(title_address.Hash);
+      ipfsRm(content_address.Hash);
+      ipfsRm(issue_address.Hash);
     }
   };
 
@@ -266,6 +274,7 @@ const Editor: FC = () => {
     setStatus(wallet_status);
     if (status === 'Finalized') {
       setStatus(undefined);
+      setTransactionId(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
     }
   };
@@ -280,7 +289,10 @@ const Editor: FC = () => {
   const action = {
     Create: handleCreateNewsletter,
     Update: handleUpdateNewsletter,
-    'Deliver Issue': handleCreateNewsletterIssue,
+    'Deliver Issue': (event: ChangeEvent<HTMLFormElement>) => {
+      dispatch(draftSelectedRecipients());
+      return handleCreateNewsletterIssue(event);
+    },
   };
 
   return (

@@ -59,4 +59,6 @@ const recordsSlice = createSlice({
   },
 });
 
+export const selectIsLoading = (state: { records: RecordState }) => state.records.status === 'loading';
+
 export default recordsSlice.reducer;

@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react';
 import {
   NewsletterRecord,
-  selectIsLoading,
   selectUnspentNewsletters,
   selectNewsletter,
   setNewsletter,
@@ -24,7 +23,6 @@ import { truncateAddress } from '@/lib/util';
 
 const EditorToolbar: FC = () => {
   const { connected, publicKey } = useWallet();
-  const isLoading: boolean = useSelector(selectIsLoading);
   const newsletters: NewsletterRecord[] = useSelector(selectUnspentNewsletters);
   const newsletter: NewsletterRecord = useSelector(selectNewsletter);
   const subscribers: SubscriberList = useSelector(selectNewsletterSubscribers);
@@ -73,13 +71,17 @@ const EditorToolbar: FC = () => {
       <hr />
       <input className="App-nav-input" placeholder="Filter" />
       <hr />
-      {connected && !isLoading && (
+      {connected && (
         <>
           <h4>Newsletters</h4>
           <ul className="App-nav-list">
             {newsletters.map((value: NewsletterRecord, index: number) => (
               <li className="App-nav-list-item" key={index}>
-                <a href="/#" onClick={() => dispatch(setNewsletter(value))} className="App-nav-list-item-link">
+                <a
+                  href="/#"
+                  onClick={() => dispatch(setNewsletter({ newsletter: value, subscribers: subscribers }))}
+                  className="App-nav-list-item-link"
+                >
                   {(value && newsletter && value.id == newsletter.id && value.data && value.data.title && (
                     <i>{value.data.title}</i>
                   )) ||
@@ -118,7 +120,9 @@ const EditorToolbar: FC = () => {
                   subscribers[newsletter.data.id].map((value: SharedSecretMapping, index: number) => (
                     <li className="App-nav-list-item" key={index}>
                       <label>
-                        <span className="checkbox-label">{truncateAddress(value.secret.recipient as string)}</span>
+                        <span className="checkbox-label">
+                          {value.sequence + ' - ' + truncateAddress(value.secret.recipient as string)}
+                        </span>
                         <input
                           type="checkbox"
                           className="checkbox-input"
