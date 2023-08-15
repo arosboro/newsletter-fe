@@ -4,56 +4,12 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import nacl_factory from 'js-nacl';
-// import CryptoJS from 'crypto-js';
 
 let nacl: nacl_factory.Nacl;
 
 nacl_factory.instantiate((instance: nacl_factory.Nacl) => {
   nacl = instance;
 });
-
-export interface NewsletterRecord {
-  id: string;
-  owner: string;
-  program_id: string;
-  spent: boolean;
-  data: {
-    id: string;
-    op: string;
-    member_sequence: string;
-    base: string;
-    revision: string;
-    template: string[] | string;
-    title: string[] | string;
-    content: string[] | string;
-    group_symmetric_key: string;
-    individual_private_key: string;
-  };
-}
-
-export interface SubscriptionRecord {
-  id: string;
-  owner: string;
-  program_id: string;
-  spent: boolean;
-  data: {
-    owner: string;
-    op: string;
-    id: string;
-    member_sequence: string;
-    member_secret_idx: string;
-  };
-}
-
-export interface SharedSecret {
-  shared_public_key: string[] | string;
-  recipient: string[] | string;
-}
-
-export interface SharedSecretMapping {
-  key: string;
-  value: SharedSecret;
-}
 
 export interface HexCipher {
   ciphertext: string;
@@ -280,23 +236,6 @@ export const initSecret = (): bigint => {
   return seed;
 };
 
-// export const encrypt = (plaintext: string, secret: string): string => {
-//   let ciphertext = '';
-//   if (typeof plaintext === 'string' && typeof secret === 'string') {
-//     ciphertext = CryptoJS.AES.encrypt(plaintext, secret).toString();
-//   }
-//   return ciphertext;
-// };
-
-// export const decrypt = (aes_ciphertext: string, secret: string): string => {
-//   let plaintext = '';
-//   if (typeof aes_ciphertext === 'string' && typeof secret === 'string') {
-//     const bytes = CryptoJS.AES.decrypt(aes_ciphertext, secret);
-//     plaintext = bytes.toString(CryptoJS.enc.Utf8);
-//   }
-//   return plaintext;
-// };
-
 export const nacl_from_hex = (hex: string): Uint8Array => {
   if (!nacl || hex.length === 0) {
     return new Uint8Array();
@@ -422,26 +361,3 @@ export const truncateAddress = (recipient: string): string => {
   const truncatedRecipient = recipient.substring(0, 4) + '...' + recipient.substring(recipient.length - 4);
   return truncatedRecipient;
 };
-
-// /**
-//  * Implement Cantor's pairing with wrapping at 251 bits of each operation.
-//  * @param { bigint } a - The first number to be paired.
-//  * @param { bigint } b - The second number to be paired.
-//  * @returns { bigint } - The result of the pairing.
-//  * @see https://en.wikipedia.org/wiki/Pairing_function#Cantor_pairing_function
-//  */
-// export const cantors_pairing = (a_int: bigint, b_int: bigint): bigint => {
-//   // +, * and / are all wrapping operations with overflow at 251 bits.
-//   // this would be const c = ((a + b) * (a + b + 1n)) / 2n + b;
-//   // in standard typescript, but typescript operations do not wrap at 251 bits.
-//   // emulate this behavior to define constant c:
-//   const a = BigInt.asUintN(251, a_int);
-//   const b = BigInt.asUintN(251, b_int);
-//   const a_plus_b = BigInt.asUintN(251, a + b);
-//   const a_plus_b_plus_1 = BigInt.asUintN(251, a_plus_b + 1n);
-//   const a_plus_b_times_a_plus_b_plus_1 = BigInt.asUintN(251, a_plus_b * a_plus_b_plus_1);
-//   const a_plus_b_times_a_plus_b_plus_1_div_2 = BigInt.asUintN(251, a_plus_b_times_a_plus_b_plus_1 / 2n);
-//   const c = BigInt.asUintN(251, a_plus_b_times_a_plus_b_plus_1_div_2 + b);
-
-//   return c;
-// };

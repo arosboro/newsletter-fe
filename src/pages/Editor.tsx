@@ -1,6 +1,5 @@
 import React, { ChangeEvent, FC, useEffect } from 'react';
 import Toggle from 'react-toggle';
-import MDEditor from '@uiw/react-md-editor';
 import EditorToolbar from '@/components/EditorToolbar';
 import './Editor.css';
 import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
@@ -49,6 +48,9 @@ import {
 import 'react-toggle/style.css';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
 import { fetchRecords } from '@/features/records/recordsSlice';
+import dynamic from 'next/dynamic';
+
+const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 const Editor: FC = () => {
   const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();

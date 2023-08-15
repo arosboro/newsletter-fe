@@ -1,5 +1,4 @@
 import React, { ChangeEvent, FC, useEffect } from 'react';
-import MDEditor from '@uiw/react-md-editor';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
 import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
 import './Reader.css';
@@ -22,6 +21,11 @@ import {
   togglePrivacyMode,
 } from '@/features/newsletters/newslettersSlice';
 import { fetchRecords } from '@/features/records/recordsSlice';
+
+import dynamic from 'next/dynamic';
+
+// Export Markdown property as a dynamic component to avoid SSR errors
+const MDPreview = dynamic(() => import('@uiw/react-markdown-preview'), { ssr: false });
 
 const Reader: FC = () => {
   const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();
@@ -140,7 +144,7 @@ const Reader: FC = () => {
             </div>
           )}
         </div>
-        <MDEditor.Markdown source={content} style={{ whiteSpace: 'pre-wrap' }} />
+        <MDPreview source={content} />
       </div>
       <div className="App-footer"></div>
     </section>
