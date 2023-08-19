@@ -30,7 +30,7 @@ If it says Obey, the contract has been deployed and a link is provided to review
 
 ### Components, Features, Lib, Pages
 
-See TypeDoc in docs folder.
+See TypeDoc in docs folder. It is served on github pages at https://arosboro.github.io/newsletter-fe/
 
 ### Tests
 
