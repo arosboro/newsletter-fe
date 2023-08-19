@@ -2,7 +2,7 @@
 id: 2535u769
 title: Newsletter Front End and Aleo Contract
 file_version: 1.1.3
-app_version: 1.15.0
+app_version: 1.15.3
 ---
 
 A frontend to handle asymmetric and symmetric key management between disparate parties. Users can create groups with the `newsletter_v0_0_8.aleo` contract and invite members to deliver issues (new content). Newsletters contain contents and template structure which is a loose representation of content. Privacy mode can be toggled on or off to show the cipher text of any given input.
@@ -179,19 +179,45 @@ unsub
 
 cantors\_pairing: Map two field values to a field value which will not intersect if there is sufficient entropy when choosing `newsletter.id`<swm-token data-swm-token=":src/features/subscriptions/subscriptionsSlice.ts:74:22:24:`  // Determine member_secret_idx manually, relying on the cantors pairing with newsletter.id`"/>.
 
+is\_empty\_bytes64: Determine if a Bytes64 struct contains only 0u128 values for b0, b1, b2, b3. Return bool.
+
 ## App
 
-## Components
+The app is a react-redux message board with built in NaCL encryption using symmetric and asymmetric key management which only authorized parties can access to decrypt communications stored off-chain on IPFS.
 
-## Features
+There are 3 routes which can direct interaction with the Application:<br/>
 
-## Lib
+*   Create
 
-## Pages
+    *   Create a Newsletter/cipher.page This lets you manage a newsletter to invite other addresses to participate in. The newsletter starts with a template, which you can toggle to fill with content. There is a privacy toggle where at any time you can preview the cipher text of your work.
+
+    *   Users can invite members to created Newsletters
+
+    *   Users can update newsletters without delivering asymmetric cipher text of such to the members.
+
+    *   Users can deliver asymmetric content to IPFS to be accessed through network mappings by users which can then respond in kind.
+
+*   Consume
+
+    *   At any time the user can preview or consume newsletters they are a party to or have created in the past. This page can also be used in the moment before a network call to preview the resulting contents.
+
+    *   Manage subscriptions (accept/unsub)
+
+    *   Read issues (sent by calling deliver by any subscriber).
+
+*   Deploy/Obey
+
+    *   If the contract has yet to be deployed it can be done from this page when it says Deploy.
+
+    *   If it says Obey, the contract has been deployed and a link is provided to review code onchain.
+
+## Components, Features, Lib, Pages
+
+See TypeDoc in docs folder
 
 ## Tests
 
-<br/>
+A percentage of the application has coverage by integration testing so that it can be confirmed to be working. And rapidly deployed to production after tests pass. These are initiated through GitHub actions.
 
 <br/>
 
