@@ -23,7 +23,16 @@ fs.readFile(mainAleoPath, 'utf8')
     // wrap the contents in backticks and export as NewsletterProgram
     const program = mainAleoContents.replace(/newsletter\.aleo/g, PROGRAM_NAME!);
 
-    const outputContents = `export const NewsletterProgramId = '${PROGRAM_NAME}';\n\nexport const NewsletterProgram = \`${program}\`;\n`;
+    // ProgramIdComments
+    const programIdComments = `/**
+ * This is the program id for the newsletter program deployed on Aleo Testnet v3.
+ * It is used to fetch the program from the blockchain.
+ */`;
+    const programComments = `/**
+ * This is the newsletter program deployed on Aleo Testnet v3.
+ * It is meant to review and be used with the deploy action for the leo wallet to deploy.
+ */`;
+    const outputContents = `${programIdComments}\nexport const NewsletterProgramId = '${PROGRAM_NAME}';\n\n${programComments}\nexport const NewsletterProgram = \`${program}\`;\n`;
 
     // write the updated data to a new file
     return fs.writeFile(outputFilePath, outputContents);

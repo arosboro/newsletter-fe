@@ -72,7 +72,7 @@ export const AddSubscriber = () => {
   const getTransactionStatus = async (txId: string) => {
     const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
     setStatus(status);
-    if (status === 'Finalized') {
+    if (status === 'Finalized' || status === 'Completed') {
       setStatus(undefined);
       setTransactionId(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));

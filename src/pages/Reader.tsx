@@ -105,7 +105,7 @@ const Reader: FC = () => {
   const getTransactionStatus = async (txId: string) => {
     const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
     setStatus(status);
-    if (status === 'Finalized') {
+    if (status === 'Finalized' || status === 'Completed') {
       setStatus(undefined);
       setTransactionId(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
@@ -127,7 +127,7 @@ const Reader: FC = () => {
             {(privacy_mode && 'Privacy mode (on) ') || 'Privacy mode (off)'}
             <Toggle defaultChecked={privacy_mode} onChange={() => dispatch(togglePrivacyMode())} />
           </label>
-          {newsletter && newsletter.data && newsletter.data.op !== publicKey && !newsletter.data.revision && (
+          {newsletter && newsletter.data && newsletter.data.op !== publicKey && newsletter.data.revision && (
             <div className="App-body-controls-invite-form">
               <form onSubmit={handleAcceptInvite}>
                 <label>

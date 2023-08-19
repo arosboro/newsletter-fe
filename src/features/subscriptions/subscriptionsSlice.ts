@@ -96,12 +96,11 @@ export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupR
             shared_public_key: decode(member_secret.shared_public_key),
             recipient: decode(member_secret.recipient),
           };
-          const subscription = subscription_records.find((record) => {
-            return (
-              BigInt(record.data.member_secret_idx.slice(0, -13)) === BigInt(member_secret_idx.slice(0, -13)) &&
-              BigInt(record.data.member_sequence.slice(0, -13)) === j
-            );
-          });
+          const subscription = subscription_records.find(
+            (record) =>
+              record.data.member_secret_idx === `${member_secret_idx}.private` &&
+              record.data.member_sequence === `${current_member_sequence}field.private`,
+          );
           shared_public_keys.push({
             sequence: j.toString(),
             subscription: subscription,

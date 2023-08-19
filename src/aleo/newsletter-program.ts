@@ -1,6 +1,14 @@
-export const NewsletterProgramId = 'newsletter_v0_0_8.aleo';
+/**
+ * This is the program id for the newsletter program deployed on Aleo Testnet v3.
+ * It is used to fetch the program from the blockchain.
+ */
+export const NewsletterProgramId = 'newsletter_v0_1_0.aleo';
 
-export const NewsletterProgram = `program newsletter_v0_0_8.aleo;
+/**
+ * This is the newsletter program deployed on Aleo Testnet v3.
+ * It is meant to review and be used with the deploy action for the leo wallet to deploy.
+ */
+export const NewsletterProgram = `program newsletter_v0_1_0.aleo;
 
 struct Bytes24:
     b0 as u8;
@@ -97,6 +105,18 @@ closure cantors_pairing:
     output r7 as field;
 
 
+closure is_empty_bytes64:
+    input r0 as Bytes64;
+    is.eq r0.b0 r0.b1 into r1;
+    is.eq r0.b0 0u128 into r2;
+    and r1 r2 into r3;
+    is.eq r0.b2 r0.b3 into r4;
+    is.eq r0.b2 0u128 into r5;
+    and r4 r5 into r6;
+    and r3 r6 into r7;
+    output r7 as boolean;
+
+
 function main:
     input r0 as Bytes64.private;
     input r1 as Bytes24.private;
@@ -108,11 +128,17 @@ function main:
     input r7 as Bytes64.private;
     input r8 as Bytes64.private;
     input r9 as Bytes64.private;
-    hash.bhp256 r6 into r10 as field;    call cantors_pairing r10 1field into r11;
-    cast self.caller self.caller r10 1field true false r0 r1 r2 r3 r4 r5 r6 r7 into r12 as Newsletter.record;
-    output r12 as Newsletter.record;
+    call is_empty_bytes64 r8 into r10;
+    not r10 into r11;
+    assert.eq r11 true;
+    call is_empty_bytes64 r9 into r12;
+    not r12 into r13;
+    assert.eq r13 true;
+    hash.bhp256 r6 into r14 as field;    call cantors_pairing r14 1field into r15;
+    cast self.caller self.caller r14 1field true false r0 r1 r2 r3 r4 r5 r6 r7 into r16 as Newsletter.record;
+    output r16 as Newsletter.record;
 
-    finalize r10 1field r11 r8 r9;
+    finalize r14 1field r15 r8 r9;
 
 finalize main:
     input r0 as field.public;
@@ -122,31 +148,15 @@ finalize main:
     input r4 as Bytes64.public;
     is.eq r1 1field into r5;
     assert.eq r5 true;
-    is.neq r3.b0 0u128 into r6;
-    is.neq r3.b1 0u128 into r7;
-    and r6 r7 into r8;
-    is.neq r3.b2 0u128 into r9;
-    and r8 r9 into r10;
-    is.neq r3.b3 0u128 into r11;
-    and r10 r11 into r12;
-    assert.eq r12 true;
-    is.neq r4.b0 0u128 into r13;
-    is.neq r4.b1 0u128 into r14;
-    and r13 r14 into r15;
-    is.neq r4.b2 0u128 into r16;
-    and r15 r16 into r17;
-    is.neq r4.b3 0u128 into r18;
-    and r17 r18 into r19;
-    assert.eq r19 true;
-    contains newsletter_member_sequence[r0] into r20;
-    is.eq r20 false into r21;
-    assert.eq r21 true;
-    contains member_secrets[r2] into r22;
-    is.eq r22 false into r23;
-    assert.eq r23 true;
+    contains newsletter_member_sequence[r0] into r6;
+    is.eq r6 false into r7;
+    assert.eq r7 true;
+    contains member_secrets[r2] into r8;
+    is.eq r8 false into r9;
+    assert.eq r9 true;
     set r1 into newsletter_member_sequence[r0];
-    cast r3 r4 into r24 as SharedSecret;
-    set r24 into member_secrets[r2];
+    cast r3 r4 into r10 as SharedSecret;
+    set r10 into member_secrets[r2];
 
 
 function invite:
@@ -162,7 +172,7 @@ function invite:
     assert.eq r5 true;
     add r0.member_sequence 1field into r6;
     cast 0u128 0u128 0u128 0u128 into r7 as Bytes64;
-    cast self.caller r0.op r0.id r6 true false r0.title r0.title_nonce r0.template r0.template_nonce r0.content r0.content_nonce r0.group_symmetric_key r0.individual_private_key into r8 as Newsletter.record;
+    cast self.caller r0.op r0.id r6 r0.base r0.revision r0.title r0.title_nonce r0.template r0.template_nonce r0.content r0.content_nonce r0.group_symmetric_key r0.individual_private_key into r8 as Newsletter.record;
     not r0.base into r9;
     not r0.revision into r10;
     cast r1 r0.op r0.id r6 r9 r10 r0.title r0.title_nonce r0.template r0.template_nonce r0.content r0.content_nonce r0.group_symmetric_key r7 into r11 as Newsletter.record;
@@ -175,7 +185,7 @@ finalize invite:
     input r0 as field.public;
     input r1 as field.public;
     contains newsletter_member_sequence[r0] into r2;
-    is.eq r2 false into r3;
+    is.eq r2 true into r3;
     assert.eq r3 true;
     set r1 into newsletter_member_sequence[r0];
 
@@ -193,41 +203,31 @@ function accept:
     assert.eq r6 true;
     is.eq r0.revision true into r7;
     assert.eq r7 true;
-    call cantors_pairing r0.id r0.member_sequence into r8;
-    cast self.caller r0.op r0.id r0.member_sequence true false r0.title r0.title_nonce r0.template r0.template_nonce r0.content r0.content_nonce r0.group_symmetric_key r1 into r9 as Newsletter.record;
-    cast self.caller r0.op r0.id r0.member_sequence r8 into r10 as Subscription.record;
-    cast r0.op r0.op r0.id r0.member_sequence r8 into r11 as Subscription.record;
-    output r9 as Newsletter.record;
-    output r10 as Subscription.record;
-    output r11 as Subscription.record;
+    call is_empty_bytes64 r2 into r8;
+    not r8 into r9;
+    assert.eq r9 true;
+    call is_empty_bytes64 r3 into r10;
+    not r10 into r11;
+    assert.eq r11 true;
+    call cantors_pairing r0.id r0.member_sequence into r12;
+    cast self.caller r0.op r0.id r0.member_sequence r0.base r0.revision r0.title r0.title_nonce r0.template r0.template_nonce r0.content r0.content_nonce r0.group_symmetric_key r1 into r13 as Newsletter.record;
+    cast self.caller r0.op r0.id r0.member_sequence r12 into r14 as Subscription.record;
+    cast r0.op r0.op r0.id r0.member_sequence r12 into r15 as Subscription.record;
+    output r13 as Newsletter.record;
+    output r14 as Subscription.record;
+    output r15 as Subscription.record;
 
-    finalize r8 r2 r3;
+    finalize r12 r2 r3;
 
 finalize accept:
     input r0 as field.public;
     input r1 as Bytes64.public;
     input r2 as Bytes64.public;
-    is.neq r1.b0 0u128 into r3;
-    is.neq r1.b1 0u128 into r4;
-    and r3 r4 into r5;
-    is.neq r1.b2 0u128 into r6;
-    and r5 r6 into r7;
-    is.neq r1.b3 0u128 into r8;
-    and r7 r8 into r9;
-    assert.eq r9 true;
-    is.neq r2.b0 0u128 into r10;
-    is.neq r2.b1 0u128 into r11;
-    and r10 r11 into r12;
-    is.neq r2.b2 0u128 into r13;
-    and r12 r13 into r14;
-    is.neq r2.b3 0u128 into r15;
-    and r14 r15 into r16;
-    assert.eq r16 true;
-    contains member_secrets[r0] into r17;
-    is.eq r17 false into r18;
-    assert.eq r18 true;
-    cast r1 r2 into r19 as SharedSecret;
-    set r19 into member_secrets[r0];
+    contains member_secrets[r0] into r3;
+    is.eq r3 false into r4;
+    assert.eq r4 true;
+    cast r1 r2 into r5 as SharedSecret;
+    set r5 into member_secrets[r0];
 
 
 function deliver:
@@ -240,8 +240,14 @@ function deliver:
     input r6 as Bytes64.private;
     is.eq r0.owner self.caller into r7;
     assert.eq r7 true;
-    cast self.caller r0.op r0.id r0.member_sequence r0.base r0.revision r1 r2 r0.template r0.template_nonce r3 r4 r0.group_symmetric_key r0.individual_private_key into r8 as Newsletter.record;
-    output r8 as Newsletter.record;
+    call is_empty_bytes64 r5 into r8;
+    not r8 into r9;
+    assert.eq r9 true;
+    call is_empty_bytes64 r6 into r10;
+    not r10 into r11;
+    assert.eq r11 true;
+    cast self.caller r0.op r0.id r0.member_sequence r0.base r0.revision r1 r2 r0.template r0.template_nonce r3 r4 r0.group_symmetric_key r0.individual_private_key into r12 as Newsletter.record;
+    output r12 as Newsletter.record;
 
     finalize r0.id r5 r6;
 
@@ -249,36 +255,20 @@ finalize deliver:
     input r0 as field.public;
     input r1 as Bytes64.public;
     input r2 as Bytes64.public;
-    is.neq r1.b0 0u128 into r3;
-    is.neq r1.b1 0u128 into r4;
-    and r3 r4 into r5;
-    is.neq r1.b2 0u128 into r6;
-    and r5 r6 into r7;
-    is.neq r1.b3 0u128 into r8;
-    and r7 r8 into r9;
-    assert.eq r9 true;
-    is.neq r2.b0 0u128 into r10;
-    is.neq r2.b1 0u128 into r11;
-    and r10 r11 into r12;
-    is.neq r2.b2 0u128 into r13;
-    and r12 r13 into r14;
-    is.neq r2.b3 0u128 into r15;
-    and r14 r15 into r16;
-    assert.eq r16 true;
-    get.or_use newsletter_issue_sequence[r0] 0field into r17;
-    add r0 r17 into r18;
-    add r0 r17 into r19;
-    add r19 1field into r20;
-    mul r18 r20 into r21;
-    div r21 2field into r22;
-    add r22 r17 into r23;
-    contains newsletter_issues[r23] into r24;
-    is.eq r24 false into r25;
-    assert.eq r25 true;
-    add r17 1field into r26;
-    set r26 into newsletter_issue_sequence[r0];
-    cast r2 r1 into r27 as SharedIssue;
-    set r27 into newsletter_issues[r23];
+    get.or_use newsletter_issue_sequence[r0] 0field into r3;
+    add r0 r3 into r4;
+    add r0 r3 into r5;
+    add r5 1field into r6;
+    mul r4 r6 into r7;
+    div r7 2field into r8;
+    add r8 r3 into r9;
+    contains newsletter_issues[r9] into r10;
+    is.eq r10 false into r11;
+    assert.eq r11 true;
+    add r3 1field into r12;
+    set r12 into newsletter_issue_sequence[r0];
+    cast r2 r1 into r13 as SharedIssue;
+    set r13 into newsletter_issues[r9];
 
 
 function update:

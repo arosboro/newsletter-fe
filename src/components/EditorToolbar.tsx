@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import {
   NewsletterRecord,
   selectUnspentNewsletters,
@@ -30,6 +30,23 @@ const EditorToolbar: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const [isToggleAll, setIsToggleAll] = useState(false);
+  const [isSubscriber, setIsSubscriber] = useState(false);
+
+  useEffect(() => {
+    if (newsletter && newsletter.id && subscribers[newsletter.data.id]) {
+      // Determine if the individual_public_key is in subscribers.
+      const isSubscriber = subscribers[newsletter.data.id].some((subscriber) => {
+        return subscriber.secret.recipient === (publicKey as string);
+      });
+      if (isSubscriber) {
+        // If the individual_public_key is in subscribers, then show subscribers.
+        setIsSubscriber(true);
+      } else {
+        // If the individual_public_key is not in subscribers, then hide subscribers.
+        setIsSubscriber(false);
+      }
+    }
+  }, [newsletter, subscribers, publicKey]);
 
   const isRecipientSelected = (subscriber: SharedSecretMapping) => {
     const recipient: string = subscriber.secret.recipient as string;
@@ -49,14 +66,23 @@ const EditorToolbar: FC = () => {
   const deriveDeliveryDraft = (subscriber: SharedSecretMapping): DeliveryDraft => {
     const recipient: string = subscriber.secret.recipient as string;
     const shared_public_key: string = subscriber.secret.shared_public_key as string;
-    const payload = {
-      recipient: recipient,
-      shared_public_key: shared_public_key,
-      title: null,
-      template: null,
-      content: null,
-    };
-    return payload;
+    const sender: SharedSecretMapping | undefined = subscribers[newsletter.data.id]
+      .filter((subscriber: SharedSecretMapping) => {
+        return subscriber.secret.recipient === (publicKey as string);
+      })
+      .pop();
+    if (sender) {
+      const payload = {
+        recipient: recipient,
+        shared_public_key: shared_public_key,
+        sender_public_key: sender.secret.shared_public_key,
+        title: null,
+        template: null,
+        content: null,
+      };
+      return payload;
+    }
+    return {} as DeliveryDraft;
   };
 
   return (
@@ -90,11 +116,11 @@ const EditorToolbar: FC = () => {
               </li>
             ))}
           </ul>
-          {newsletter && newsletter.id && newsletter.data.op === publicKey && (
+          {newsletter && newsletter.id && isSubscriber && (
             <>
               <hr />
               <h4>Subscribers</h4>
-              <AddSubscriber />
+              {newsletter.data.op === publicKey && <AddSubscriber />}
               <ul className="App-nav-list">
                 <li className="App-nav-list-item">
                   <label>
