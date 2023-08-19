@@ -44,11 +44,13 @@ import {
   selectRecipients,
   selectRawNewsletter,
   draftSelectedRecipients,
+  DeliveryDraft,
 } from '@/features/newsletters/newslettersSlice';
 import 'react-toggle/style.css';
 import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
 import { fetchRecords } from '@/features/records/recordsSlice';
 import dynamic from 'next/dynamic';
+import { SubscriberList, selectNewsletterSubscribers } from '@/features/subscriptions/subscriptionsSlice';
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
@@ -69,6 +71,7 @@ const Editor: FC = () => {
   const individual_private_key: string = useSelector(selectIndividualPrivateKey);
   const individual_public_key: string = useSelector(selectIndividualPublicKey);
   const newsletter: NewsletterRecord = useSelector(selectNewsletter);
+  const subscribers: SubscriberList = useSelector(selectNewsletterSubscribers);
   const selected_recipients = useSelector(selectRecipients);
   const record = useSelector(selectRawNewsletter);
   const dispatch = useDispatch<AppDispatch>();
@@ -80,6 +83,24 @@ const Editor: FC = () => {
   const [fee, setFee] = React.useState<string>('5.0365');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
+  const [is_issue_valid, setIsIssueValid] = React.useState<boolean | undefined>();
+  const [isSubscriber, setIsSubscriber] = React.useState(false);
+
+  useEffect(() => {
+    if (newsletter && newsletter.id && subscribers[newsletter.data.id]) {
+      // Determine if the individual_public_key is in subscribers.
+      const isSubscriber = subscribers[newsletter.data.id].some((subscriber) => {
+        return subscriber.secret.recipient === (publicKey as string);
+      });
+      if (isSubscriber) {
+        // If the individual_public_key is in subscribers, then show subscribers.
+        setIsSubscriber(true);
+      } else {
+        // If the individual_public_key is not in subscribers, then hide subscribers.
+        setIsSubscriber(false);
+      }
+    }
+  }, [newsletter, subscribers, publicKey]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -103,6 +124,14 @@ const Editor: FC = () => {
     setSharedPublicKey(individual_public_key);
     setSharedRecipient(publicKey);
   }, [individual_public_key, publicKey]);
+
+  useEffect(() => {
+    dispatch(draftSelectedRecipients());
+    const valid_issue = selected_recipients.some(
+      (issue: DeliveryDraft) => issue.title !== null && issue.template !== null && issue.content !== null,
+    );
+    setIsIssueValid(valid_issue);
+  }, [title, template, content, dispatch]);
 
   const handleCreateNewsletter = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -220,7 +249,9 @@ const Editor: FC = () => {
 
     const ciphertext = issue_cipher.ciphertext as string;
     const nonce = issue_cipher.nonce as string;
-    const decrypted_issue = JSON.parse(decryptGroupMessage(ciphertext, nonce, group_symmetric_key) as string);
+    const decrypted_issue: DeliveryDraft[] = JSON.parse(
+      decryptGroupMessage(ciphertext, nonce, group_symmetric_key) as string,
+    );
     console.log(decrypted_issue);
 
     const title_bigints = padArray(splitStringToBigInts(title_address.Hash), 4);
@@ -270,9 +301,9 @@ const Editor: FC = () => {
   };
 
   const getTransactionStatus = async (txId: string) => {
-    const wallet_status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
-    setStatus(wallet_status);
-    if (status === 'Finalized') {
+    const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
+    setStatus(status);
+    if (status === 'Finalized' || status === 'Completed') {
       setStatus(undefined);
       setTransactionId(undefined);
       dispatch(fetchRecords({ connected: connected, requestRecords: requestRecords }));
@@ -289,8 +320,7 @@ const Editor: FC = () => {
   const action = {
     Create: handleCreateNewsletter,
     Update: handleUpdateNewsletter,
-    'Deliver Issue': (event: ChangeEvent<HTMLFormElement>) => {
-      dispatch(draftSelectedRecipients());
+    'Deliver Issue': async (event: ChangeEvent<HTMLFormElement>) => {
       return handleCreateNewsletterIssue(event);
     },
   };
@@ -345,7 +375,7 @@ const Editor: FC = () => {
             }
           />
 
-          {connected && (
+          {connected && isSubscriber && (
             <div className="App-body-form-footer">
               {transactionId && status && (
                 <div>
@@ -355,7 +385,10 @@ const Editor: FC = () => {
               <input
                 type="submit"
                 disabled={
-                  !publicKey || (actionLabel === 'Create' && (!shared_public_key || !shared_recipient)) || privacy_mode
+                  !publicKey ||
+                  (actionLabel === 'Create' && (!shared_public_key || !shared_recipient)) ||
+                  (actionLabel === 'Deliver Issue' && !is_issue_valid) ||
+                  privacy_mode
                 }
                 value={actionLabel}
               />

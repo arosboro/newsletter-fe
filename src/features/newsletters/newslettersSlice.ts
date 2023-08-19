@@ -45,6 +45,7 @@ export interface NewsletterRecord {
 export interface DeliveryDraft {
   recipient: string;
   shared_public_key: string;
+  sender_public_key: string | string[];
   title: HexCipher | string | null;
   template: HexCipher | string | null;
   content: HexCipher | string | null;
@@ -242,7 +243,7 @@ export const fetchIssues = async (record: NewsletterRecord): Promise<SharedIssue
   await init().then(async () => {
     const issue_sequence = BigInt(issue_sequence_field.slice(0, -5));
     // Fetch the issues of the newsletter one time:
-    for (let j = 1n; j < BigInt(issue_sequence); j += 1n) {
+    for (let j = 0n; j < BigInt(issue_sequence); j += 1n) {
       const current_issue_sequence = BigInt(j).toString();
       const issue_idx: string = cantors_pairing(`${newsletter_id_field}`, `${current_issue_sequence}field`);
       const issue_json = await getMapping(
@@ -281,73 +282,61 @@ export const setNewsletter = createAsyncThunk(
       };
     }
     const decrypted_issues: DeliveryDraft[] = [];
-    console.log(issues_init);
 
     for (const issue of issues_init) {
       const issue_cipher = await resolve(issue.path as string);
       const group_symmetric_key = info.newsletter.data.group_symmetric_key as string;
       const issue_decrypted = decryptGroupMessage(issue_cipher, issue.nonce as string, group_symmetric_key);
       if (issue_decrypted) {
-        console.log(issue_decrypted);
         const issue_recipient = JSON.parse(issue_decrypted).filter(
           (item: any) => item.recipient === info.newsletter.owner,
         );
-        if (issue_recipient.length >= 1 && Object.keys(info.subscribers).length >= 1) {
-          const sender = Object.values(info.subscribers[info.newsletter.data.id]).filter(
-            (subscriber) => subscriber.sequence === '1',
-          );
-          if (sender && Object.keys(sender).length >= 1) {
-            const sender_public_key = sender[0].secret.shared_public_key as string;
-            let title_decrypted: string | null = null;
-            let template_decrypted: string | null = null;
-            let content_decrypted: string | null = null;
-            if (issue_recipient[0].title && issue_recipient[0].title.ciphertext && issue_recipient[0].title.nonce) {
-              title_decrypted = decryptMessage(
-                issue_recipient[0].title.ciphertext,
-                issue_recipient[0].title.nonce,
-                sender_public_key,
-                info.newsletter.data.individual_private_key as string,
-              );
-            }
-            if (
-              issue_recipient[0].template &&
-              issue_recipient[0].template.ciphertext &&
-              issue_recipient[0].template.nonce
-            ) {
-              template_decrypted = decryptMessage(
-                issue_recipient[0].template.ciphertext,
-                issue_recipient[0].template.nonce,
-                sender_public_key,
-                info.newsletter.data.individual_private_key as string,
-              );
-            }
-            if (
-              issue_recipient[0].content &&
-              issue_recipient[0].content.ciphertext &&
-              issue_recipient[0].content.nonce
-            ) {
-              content_decrypted = decryptMessage(
-                issue_recipient[0].content.ciphertext,
-                issue_recipient[0].content.nonce,
-                sender_public_key,
-                info.newsletter.data.individual_private_key as string,
-              );
-            }
-            if (title_decrypted && template_decrypted && content_decrypted) {
-              const user_issue_decrypted: DeliveryDraft = {
-                ...issue_recipient[0],
-                title: title_decrypted,
-                template: template_decrypted,
-                content: content_decrypted,
-              };
-              decrypted_issues.push(user_issue_decrypted);
-            }
+        if (issue_recipient.length >= 1) {
+          const sender_public_key = issue_recipient[0].sender_public_key as string;
+          let title_decrypted: string | null = null;
+          let template_decrypted: string | null = null;
+          let content_decrypted: string | null = null;
+          if (issue_recipient[0].title && issue_recipient[0].title.ciphertext && issue_recipient[0].title.nonce) {
+            title_decrypted = decryptMessage(
+              issue_recipient[0].title.ciphertext,
+              issue_recipient[0].title.nonce,
+              sender_public_key,
+              info.newsletter.data.individual_private_key as string,
+            );
+          }
+          if (
+            issue_recipient[0].template &&
+            issue_recipient[0].template.ciphertext &&
+            issue_recipient[0].template.nonce
+          ) {
+            template_decrypted = decryptMessage(
+              issue_recipient[0].template.ciphertext,
+              issue_recipient[0].template.nonce,
+              sender_public_key,
+              info.newsletter.data.individual_private_key as string,
+            );
+          }
+          if (issue_recipient[0].content && issue_recipient[0].content.ciphertext && issue_recipient[0].content.nonce) {
+            content_decrypted = decryptMessage(
+              issue_recipient[0].content.ciphertext,
+              issue_recipient[0].content.nonce,
+              sender_public_key,
+              info.newsletter.data.individual_private_key as string,
+            );
+          }
+          if (title_decrypted && template_decrypted && content_decrypted) {
+            const user_issue_decrypted: DeliveryDraft = {
+              ...issue_recipient[0],
+              sender_public_key: sender_public_key,
+              title: title_decrypted,
+              template: template_decrypted,
+              content: content_decrypted,
+            };
+            decrypted_issues.push(user_issue_decrypted);
           }
         }
       }
     }
-
-    console.log(decrypted_issues);
 
     return {
       newsletter: info.newsletter,
@@ -472,11 +461,13 @@ const newslettersSlice = createSlice({
       const new_drafts: DeliveryDraft[] = [];
       state.selected_recipients.forEach((recipient: DeliveryDraft) => {
         const shared_public_key = recipient.shared_public_key;
+        const individual_public_key = state.public_key as string;
         const title = encryptMessage(state.title as string, state.individual_private_key, shared_public_key);
         const template = encryptMessage(state.template as string, state.individual_private_key, shared_public_key);
         const content = encryptMessage(state.content as string, state.individual_private_key, shared_public_key);
         const draft = {
           ...recipient,
+          individual_public_key,
           title,
           template,
           content,
@@ -658,7 +649,7 @@ export const selectSpentNewsletters = createSelector(selectNewsletterList, (news
 const selectInvites = (state: { newsletters: NewsletterState }) => {
   const publicKey = state.newsletters.public_key;
   return Object.values(state.newsletters.list).filter((record) => {
-    return !record.spent && record.data.op !== publicKey && record.data.base;
+    return !record.spent && record.data.op !== publicKey && record.data.revision;
   });
 };
 
