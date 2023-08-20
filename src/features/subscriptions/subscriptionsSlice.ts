@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSelector, createSlice, current, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Record } from '@/features/records/recordsSlice';
 import { isNewsletterRecord, NewsletterRecord, processNewsletterData } from '@/features/newsletters/newslettersSlice';
 import { getMapping } from '@/aleo/rpc';
