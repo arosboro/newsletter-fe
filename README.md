@@ -2,6 +2,12 @@
 
 The app is a react-redux message board with built in NaCL encryption using symmetric and asymmetric key management which only authorized parties can access to decrypt communications stored off-chain on IPFS.
 
+## Video Demos
+
+- [Demo Part 1](videos/Demo%20Part%201.webm)
+- [Demo Part 2](videos/Demo%20Part%202.webm)
+- [Demo Part 3](videos/Demo%20Part%203.webm)
+
 There are 3 routes which can direct interaction with the Application:
 
 ### Create
