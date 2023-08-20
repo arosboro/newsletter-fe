@@ -33,11 +33,13 @@ const EditorToolbar: FC = () => {
   const [isSubscriber, setIsSubscriber] = useState(false);
 
   useEffect(() => {
-    if (newsletter && newsletter.id && subscribers[newsletter.data.id]) {
+    if ((newsletter && newsletter.id) || (newsletter.id && subscribers[newsletter.data.id])) {
       // Determine if the individual_public_key is in subscribers.
-      const isSubscriber = subscribers[newsletter.data.id].some((subscriber) => {
-        return subscriber.secret.recipient === (publicKey as string);
-      });
+      const isSubscriber =
+        newsletter.data.op === newsletter.owner ||
+        subscribers[newsletter.data.id].some((subscriber) => {
+          return subscriber.secret.recipient === (publicKey as string);
+        });
       if (isSubscriber) {
         // If the individual_public_key is in subscribers, then show subscribers.
         setIsSubscriber(true);
