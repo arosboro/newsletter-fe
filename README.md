@@ -8,6 +8,12 @@ The app is a react-redux message board with built in NaCL encryption using symme
 - [Demo Part 2](videos/Demo%20Part%202.webm)
 - [Demo Part 3](videos/Demo%20Part%203.webm)
 
+## Build and Run
+
+`npm run` will list all commands from package.json. A simple `npm install` followed by `npm run dev` will get you started running the frontend.
+
+## How to use the Application
+
 There are 3 routes which can direct interaction with the Application:
 
 ### Create

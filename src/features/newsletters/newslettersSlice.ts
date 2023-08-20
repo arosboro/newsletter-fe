@@ -20,6 +20,12 @@ import { setPublicKey } from '../accounts/accountsSlice';
 import { NewsletterProgramId } from '@/aleo/newsletter-program';
 import { getMapping } from '@/aleo/rpc';
 
+/**
+ * NewsletterRecord is the data structure that is stored in the newsletter program.
+ * It contains the newsletter's title, template and content.  These are represented onchain and replaced
+ * via processing in the client.  The title, template and content are encrypted with a group symmetric key.
+ * Each NewsletterRecord holder has access to this group symmetric key.
+ */
 export interface NewsletterRecord {
   id: string;
   owner: string;
@@ -42,6 +48,12 @@ export interface NewsletterRecord {
   };
 }
 
+/**
+ * DeliveryDraft is the data structure that is sent to the newsletter program.
+ * It is the data structure that is used to create a newsletter issue.
+ * It contains the recipient, keys and information needed to decrypt the newsletter's
+ * title, template and content.  These are represented as HexCipher objects.
+ */
 export interface DeliveryDraft {
   recipient: string;
   shared_public_key: string;
@@ -51,22 +63,57 @@ export interface DeliveryDraft {
   content: HexCipher | string | null;
 }
 
+/**
+ * Example draft data:
+ * {
+ *  "title": "Example Title",
+ * "template": "Example Template",
+ * "content": "Example Content"
+ * }
+ */
 interface ExampleDraft {
   title: string | null;
   template: string | null;
   content: string | null;
 }
 
+/**
+ * SharedIssueSecret is the data structure that is stored in the newsletter program.
+ * It contains the path and nonce of the newsletter issue.
+ * The path is the path to the newsletter issue's data on IPFS.
+ * The nonce is the nonce used to encrypt the newsletter issue's data with the group
+ * symmetric key.
+ */
 export interface SharedIssueSecret {
   path: string[] | string;
   nonce: string[] | string;
 }
 
+/**
+ * NewsletterIssue is the data structure that is returned from the newsletter program mappings.
+ * It contains the newsletter record and the DeliveryDrafts after they have been recovered from
+ * the encrypted JSON blob on IPFS. The DeliveryDrafts are the newsletter issues, which are
+ * the newsletters that have been sent to the newsletter's subscribers.
+ */
 interface NewsletterIssue {
   newsletter: NewsletterRecord;
   issues: DeliveryDraft[];
 }
 
+/**
+ * Represents the state structure stored in the newsletter program.
+ * This structure encompasses various attributes of the newsletter, including its title, template, and content.
+ * These attributes are maintained on-chain but processed client-side. They are encrypted using a group symmetric key,
+ * which is accessible to all holders of the NewsletterRecord.
+ * Additionally, the newsletter state includes the public key, individual private key, and individual public key.
+ * These are employed to encrypt the title, template, and content specifically for each recipient.
+ * Selected recipients indicate the users chosen to receive the newsletter.
+ * The newsletter state records its sent issues, i.e., newsletters delivered to subscribers.
+ * Other attributes encompass the newsletter's status, errors, draft mode, template mode, and privacy mode.
+ * Details like draft title, draft template, and draft content are also included.
+ * Nonces for title, template, and content, along with their corresponding ciphertexts, are part of the state.
+ * Raw, encrypted, and decrypted records, as well as a display list for the UI, are maintained.
+ */
 export type NewsletterState = {
   raw_records: { [key: string]: NewsletterRecord };
   list: { [key: string]: NewsletterRecord };
@@ -99,6 +146,9 @@ export type NewsletterState = {
   error: string | undefined;
 };
 
+/**
+ * The initial state of the newsletter program.
+ */
 const initialState: NewsletterState = {
   raw_records: {},
   list: {},
@@ -131,6 +181,11 @@ const initialState: NewsletterState = {
   error: undefined,
 };
 
+/**
+ * Client side processing to arrive at usuable data for the UI.
+ * @param record
+ * @returns
+ */
 export const processNewsletterData = (record: NewsletterRecord) => {
   const data = {
     ...record.data,
@@ -145,12 +200,23 @@ export const processNewsletterData = (record: NewsletterRecord) => {
   return { ...record, data: data };
 };
 
+/**
+ * Determine if a given Record is a NewsletterRecord.
+ * @param record
+ * @returns
+ */
 export const isNewsletterRecord = (
   record: NewsletterRecord | SubscriptionRecord | Record,
 ): record is NewsletterRecord => {
   return (record as NewsletterRecord).data.base !== undefined;
 };
 
+/**
+ * Resolve the newsletter records from the newsletter program.  Fetch from IPFS.
+ * @param records
+ * @returns
+ * encrypted_records: NewsletterRecord[]
+ */
 export const resolveNewsletterRecords = createAsyncThunk('newsletters/resolveRecords', async (records: Record[]) => {
   const newsletter_records: NewsletterRecord[] = records.filter((record: Record) => {
     return isNewsletterRecord(record);
@@ -185,6 +251,12 @@ export const resolveNewsletterRecords = createAsyncThunk('newsletters/resolveRec
   return encrypted_records;
 });
 
+/**
+ * Decrypt the newsletter records from the newsletter program.
+ * @param records
+ * @returns
+ * decrypted_records: NewsletterRecord[]
+ */
 export const decryptNewsletterRecords = createAsyncThunk(
   'newsletters/decryptRecords',
   async (records: NewsletterRecord[]) => {
@@ -227,6 +299,12 @@ export const decryptNewsletterRecords = createAsyncThunk(
   },
 );
 
+/**
+ * Get issues from mappings in the newsletter program.
+ * @param record
+ * @returns
+ * issues: SharedIssueSecret[]
+ */
 export const fetchIssues = async (record: NewsletterRecord): Promise<SharedIssueSecret[]> => {
   const newsletter_id = record.data.id;
   const newsletter_id_field = `${newsletter_id}field`;
@@ -263,14 +341,27 @@ export const fetchIssues = async (record: NewsletterRecord): Promise<SharedIssue
   return issues;
 };
 
-export const fetchExample = createAsyncThunk('newsletters/fetchExample', async () => {
+/**
+ * Fetch example newsletter drafts from the client.
+ * @returns
+ * example: ExampleDraft
+ */
+export const fetchExample = createAsyncThunk('newsletters/fetchExample', async (): Promise<ExampleDraft> => {
   const data = import.meta.glob('@/assets/example-drafts.json', { as: 'raw', eager: true });
   const examples: ExampleDraft[] = JSON.parse(data['/src/assets/example-drafts.json']);
   const example: ExampleDraft = examples[Math.floor(Math.random() * examples.length)];
   return example;
 });
 
-// Include state below so it can be accessed:
+/**
+ * Set the newsletter record and its issues.
+ * This occurs when the user interacts by choosing a newsletter.
+ * @param info
+ * @returns {
+ * newsletter: NewsletterRecord,
+ * issues: DeliveryDraft[],
+ * }
+ */
 export const setNewsletter = createAsyncThunk(
   'newsletters/setNewsletter',
   async (info: { newsletter: NewsletterRecord; subscribers: SubscriberList }): Promise<NewsletterIssue> => {
@@ -345,6 +436,23 @@ export const setNewsletter = createAsyncThunk(
   },
 );
 
+/**
+ * The newsletter slice of the Redux store.
+ * This slice encompasses the newsletter state, including its attributes and methods.
+ * The newsletter state is initialized with the initial state.
+ * The newsletter slice includes reducers for toggling the template mode and privacy mode.
+ * It also includes reducers for initializing a draft, setting the title, template, and content,
+ * and setting the selected recipients.
+ * The newsletter slice includes extra reducers for fetching records, resolving newsletter records,
+ * decrypting newsletter records, setting the public key, fetching example newsletter drafts,
+ * and setting the newsletter.
+ * The newsletter slice includes selectors for selecting the newsletter list, title nonce,
+ * template nonce, content nonce, raw newsletter, loading status, title, template, content,
+ * title ciphertext, template ciphertext, content ciphertext, raw records, encrypted records,
+ * decrypted records, and display list.
+ * @returns
+ * newslettersSlice: Slice<NewsletterState, {}, string>
+ */
 const newslettersSlice = createSlice({
   name: 'newsletters',
   initialState,
