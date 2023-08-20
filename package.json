@@ -2,6 +2,7 @@
   "name": "newsletter-fe",
   "private": true,
   "version": "0.0.1",
+  "license": "GPL-3.0",
   "scripts": {
     "wasm": "cd ./newsletter_worker && wasm-pack build --target web",
     "dev": "vite",
