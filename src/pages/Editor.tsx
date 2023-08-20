@@ -374,8 +374,7 @@ const Editor: FC = () => {
               (!template_mode && !privacy_mode && dispatch(setContent(value as string)))
             }
           />
-
-          {connected && isSubscriber && (
+          {connected && ((isSubscriber && newsletter && newsletter.id) || !newsletter.id) && (
             <div className="App-body-form-footer">
               {transactionId && status && (
                 <div>
