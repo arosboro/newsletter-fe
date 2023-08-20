@@ -85,6 +85,7 @@ const Editor: FC = () => {
   const [status, setStatus] = React.useState<string | undefined>();
   const [is_issue_valid, setIsIssueValid] = React.useState<boolean | undefined>();
   const [isSubscriber, setIsSubscriber] = React.useState(false);
+  const [isOp, setIsOp] = React.useState(false);
 
   useEffect(() => {
     if (newsletter && newsletter.id && subscribers[newsletter.data.id]) {
@@ -101,6 +102,14 @@ const Editor: FC = () => {
       }
     }
   }, [newsletter, subscribers, publicKey]);
+
+  useEffect(() => {
+    if (newsletter && newsletter.id && newsletter.data.op === (publicKey as string)) {
+      setIsOp(true);
+    } else {
+      setIsOp(false);
+    }
+  }, [newsletter, publicKey]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -374,25 +383,27 @@ const Editor: FC = () => {
               (!template_mode && !privacy_mode && dispatch(setContent(value as string)))
             }
           />
-          {connected && ((isSubscriber && newsletter && newsletter.id) || !newsletter.id) && (
-            <div className="App-body-form-footer">
-              {transactionId && status && (
-                <div>
-                  <div>{`Transaction status: ${status}`}</div>
-                </div>
-              )}
-              <input
-                type="submit"
-                disabled={
-                  !publicKey ||
-                  (actionLabel === 'Create' && (!shared_public_key || !shared_recipient)) ||
-                  (actionLabel === 'Deliver Issue' && !is_issue_valid) ||
-                  privacy_mode
-                }
-                value={actionLabel}
-              />
-            </div>
-          )}
+          {connected &&
+            ((((isSubscriber && actionLabel === 'Deliver Issue') || isOp) && newsletter && newsletter.id) ||
+              !newsletter.id) && (
+              <div className="App-body-form-footer">
+                {transactionId && status && (
+                  <div>
+                    <div>{`Transaction status: ${status}`}</div>
+                  </div>
+                )}
+                <input
+                  type="submit"
+                  disabled={
+                    !publicKey ||
+                    (actionLabel === 'Create' && (!shared_public_key || !shared_recipient)) ||
+                    (actionLabel === 'Deliver Issue' && !is_issue_valid) ||
+                    privacy_mode
+                  }
+                  value={actionLabel}
+                />
+              </div>
+            )}
         </form>
       </div>
       <div className="App-footer"></div>
