@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSelector, createSlice, current, PayloadAction } from '@reduxjs/toolkit';
 import { Record } from '@/features/records/recordsSlice';
 import { isNewsletterRecord, NewsletterRecord, processNewsletterData } from '@/features/newsletters/newslettersSlice';
 import { getMapping } from '@/aleo/rpc';
@@ -65,24 +65,22 @@ export const isSubscriptionRecord = (
 };
 
 export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupRecords', async (records: Record[]) => {
-  const newsletter_records = records.filter((record) => isNewsletterRecord(record)) as NewsletterRecord[];
-  // const cleaned_newsletter_records = newsletter_records.map((record) => {
-  //   return processNewsletterData(record);
-  // });
+  const newsletter_records = records.filter(
+    (record) => isNewsletterRecord(record) && !record.spent,
+  ) as NewsletterRecord[];
   const subscription_records = records.filter((record) => isSubscriptionRecord(record)) as SubscriptionRecord[];
   const shared_public_keys: SharedSecretMapping[] = [];
   // Determine member_secret_idx manually, relying on the cantors pairing with newsletter.id
   // and newsletter.member_sequence to determine the member_secret_idx
-  for (let i = 0; i < newsletter_records.length; i++) {
-    // Get all public keys for every iteration of the newsletter.member_sequence related to the
-    // newsletter.id
-    const raw_newsletter: NewsletterRecord = newsletter_records[i];
-    const newsletter: NewsletterRecord = processNewsletterData(raw_newsletter);
-    const newsletter_id = BigInt(newsletter.data.id);
-    const newsletter_member_sequence = newsletter.data.member_sequence;
-    for (let j = 1n; j <= BigInt(newsletter_member_sequence); j += 1n) {
-      const current_member_sequence = BigInt(j).toString();
-      await init().then(async () => {
+  await init().then(async () => {
+    for (let i = 0; i < newsletter_records.length; i++) {
+      // Get all public keys for every iteration of the newsletter.member_sequence related to the
+      // newsletter.id
+      const newsletter: NewsletterRecord = processNewsletterData(newsletter_records[i]);
+      const newsletter_id = BigInt(newsletter.data.id);
+      const newsletter_member_sequence = newsletter.data.member_sequence;
+      for (let j = 1n; j <= BigInt(newsletter_member_sequence); j += 1n) {
+        const current_member_sequence = BigInt(j).toString();
         const member_secret_idx = cantors_pairing(`${newsletter_id}field`, `${current_member_sequence}field`);
         const member_secret_json: string = await getMapping(
           'https://vm.aleo.org/api',
@@ -101,16 +99,17 @@ export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupR
               record.data.member_secret_idx === `${member_secret_idx}.private` &&
               record.data.member_sequence === `${current_member_sequence}field.private`,
           );
-          shared_public_keys.push({
+          const shared_public_key_record: SharedSecretMapping = {
             sequence: j.toString(),
             subscription: subscription,
             newsletter: newsletter,
             secret: shared_public_key,
-          });
+          };
+          shared_public_keys.push(shared_public_key_record);
         }
-      });
+      }
     }
-  }
+  });
   return shared_public_keys;
 });
 
@@ -169,22 +168,21 @@ const subscriptionsSlice = createSlice({
       })
       .addCase(lookupSubscriptionRecords.fulfilled, (state, action: PayloadAction<SharedSecretMapping[]>) => {
         const newRecords: { [key: string]: SharedSecretMapping } = {};
-        action.payload.forEach((map) => {
-          newRecords[map.sequence] = map;
+        action.payload.forEach((mapping) => {
+          if (mapping.subscription) {
+            newRecords[mapping.subscription.data.id] = mapping;
+          }
         });
         state.list = newRecords;
-        const keys = Object.keys(state.list);
-        state.newsletter_list = {};
-        for (let i = 0; i < keys.length; i++) {
-          const mapping = state.list[keys[i]];
-          const newsletter_id = mapping.newsletter.data.id;
-          if (typeof state.newsletter_list[newsletter_id] === 'undefined') {
-            state.newsletter_list[newsletter_id] = [];
+        // Group a newsletter list by newsletter id, then sequence:
+        const newsletter_list: SubscriberList = {};
+        action.payload.forEach((record: SharedSecretMapping) => {
+          if (!newsletter_list[record.newsletter.data.id]) {
+            newsletter_list[record.newsletter.data.id] = [];
           }
-          mapping.secret.shared_public_key = mapping.secret.shared_public_key as string;
-          mapping.secret.recipient = mapping.secret.recipient as string;
-          state.newsletter_list[newsletter_id].push(mapping);
-        }
+          newsletter_list[record.newsletter.data.id][parseInt(record.sequence)] = record;
+        });
+        state.newsletter_list = newsletter_list;
         state.status = 'idle';
       })
       .addCase(lookupSubscriptionRecords.rejected, (state, action) => {
