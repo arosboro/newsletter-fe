@@ -25,7 +25,7 @@ jobs:
         run: npm run wasm
 
       - name: Wasm Pack Test (nodejs)
-        run: wasm-pack test --node
+        run: cargo install wasm-pack && cargo install wasm-bindgen-cli && wasm-pack test --node
 
       - name: Build
         run: npm run build
