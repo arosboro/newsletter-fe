@@ -147,6 +147,12 @@ send-invite:hover {
   font-weight: 500;
   line-height: 1.1;
 }
+
+.App-body-editor {
+  font-size: 14px;
+  line-height: 18px;
+}
+
 .App-body-form-footer-input {
   margin-left: 1rem;
   padding: 0 0.5rem;

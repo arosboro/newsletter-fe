@@ -52,10 +52,18 @@ import { fetchRecords } from '@/features/records/recordsSlice';
 import dynamic from 'next/dynamic';
 import { SubscriberList, selectNewsletterSubscribers } from '@/features/subscriptions/subscriptionsSlice';
 
+// Dynamically import the editor to avoid SSR issues
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
+/**
+ * Editor component provides the user with a set of actions and interfaces to manage
+ * newsletters and their subscribers.
+ */
 const Editor: FC = () => {
+  // Wallet integration hooks
   const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();
+
+  // Redux integration hooks
   const title = useSelector(selectTitle);
   const title_nonce = useSelector(selectTitleNonce);
   const template = useSelector(selectTemplate);
@@ -76,8 +84,7 @@ const Editor: FC = () => {
   const record = useSelector(selectRawNewsletter);
   const dispatch = useDispatch<AppDispatch>();
 
-  // Long assignment of a template string to a variable
-  // Get the inital secret as a random string of chacters from a whole number
+  // Component local states
   const [shared_public_key, setSharedPublicKey] = React.useState('');
   const [shared_recipient, setSharedRecipient] = React.useState('');
   const [fee, setFee] = React.useState<string>('5.0365');
@@ -87,6 +94,13 @@ const Editor: FC = () => {
   const [isSubscriber, setIsSubscriber] = React.useState(false);
   const [isOp, setIsOp] = React.useState(false);
 
+  /**
+   * This effect determines if the current user is a subscriber and updates the state accordingly.
+   * The user is considered a subscriber if their publicKey matches either the owner
+   * or the recipient of a subscription record.
+   * If the user is a subscriber, the `isSubscriber` state is set to `true`.
+   * If the user is not a subscriber, the `isSubscriber` state is set to `false`.
+   */
   useEffect(() => {
     if (newsletter && newsletter.id && subscribers[newsletter.data.id]) {
       // Determine if the individual_public_key is in subscribers.
@@ -103,6 +117,12 @@ const Editor: FC = () => {
     }
   }, [newsletter, subscribers, publicKey]);
 
+  /**
+   * This effect determines if the current user is the owner of the newsletter and updates the state accordingly.
+   * The user is considered the owner if their publicKey matches the owner of the newsletter.
+   * If the user is the owner, the `isOp` state is set to `true`.
+   * If the user is not the owner, the `isOp` state is set to `false`.
+   */
   useEffect(() => {
     if (newsletter && newsletter.id && newsletter.data.op === (publicKey as string)) {
       setIsOp(true);
@@ -111,6 +131,10 @@ const Editor: FC = () => {
     }
   }, [newsletter, publicKey]);
 
+  /**
+   * This effect is used to check the status of the transaction.
+   * The effect will continuously poll for the transaction status when a transactionId is available.
+   */
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
 
@@ -127,6 +151,10 @@ const Editor: FC = () => {
     };
   }, [transactionId]);
 
+  /**
+   * This effect is used to set the sharedSecret and sharedRecipient.
+   * The effect will set the sharedSecret and sharedRecipient when the individual_public_key and publicKey are available.
+   */
   useEffect(() => {
     // set the sharedSecret and sharedRecipient
     if (!publicKey || !individual_public_key) return;
@@ -134,6 +162,10 @@ const Editor: FC = () => {
     setSharedRecipient(publicKey);
   }, [individual_public_key, publicKey]);
 
+  /**
+   * This effect keeps the encrypted copies of an issue in sync before the deliver call is made.
+   * The effect will update the encrypted copies of an issue when the title, template, or content changes.
+   */
   useEffect(() => {
     dispatch(draftSelectedRecipients());
     const valid_issue = selected_recipients.some(
@@ -142,6 +174,10 @@ const Editor: FC = () => {
     setIsIssueValid(valid_issue);
   }, [title, template, content, dispatch]);
 
+  /**
+   * Call the `main` transition of the newsletter program to create a new newsletter.
+   * @param event
+   */
   const handleCreateNewsletter = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();
@@ -199,6 +235,10 @@ const Editor: FC = () => {
     }
   };
 
+  /**
+   * Allow the operater to update a newsletter.  This event handler will update the newsletter title, template, and contents.
+   * @param event
+   */
   const handleUpdateNewsletter = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();
@@ -246,6 +286,10 @@ const Editor: FC = () => {
     }
   };
 
+  /**
+   * Handle the deliver call to the newsletter program. This event handler will create a new issue of the newsletter.
+   * @param event
+   */
   const handleCreateNewsletterIssue = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();

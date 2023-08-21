@@ -10,13 +10,23 @@ import subscriptionsReducer, {
   fetchSubscriptionMappings,
 } from '@/features/subscriptions/subscriptionsSlice';
 
-const loggerMiddleware = (storeAPI: MiddlewareAPI) => (next: Dispatch<AnyAction>) => (action) => {
+/**
+ * Middleware to log actions and state.
+ * @param {MiddlewareAPI} storeAPI - The middleware API provided by Redux.
+ * @returns The middleware chain.
+ */
+const loggerMiddleware = (storeAPI: MiddlewareAPI) => (next: Dispatch<AnyAction>) => (action: any) => {
   console.log('dispatching', action);
   const result = next(action);
   console.log('next state', storeAPI.getState());
   return result;
 };
 
+/**
+ * Middleware to handle newsletters' records logic.
+ * @param {any} storeAPI - The middleware API (generic type).
+ * @returns The middleware chain.
+ */
 const newsletterMiddleware = (storeAPI: any) => (next: Dispatch<AnyAction>) => (action: AnyAction) => {
   if (fetchRecords.fulfilled.match(action)) {
     storeAPI.dispatch(resolveNewsletterRecords(action.payload));
@@ -27,6 +37,11 @@ const newsletterMiddleware = (storeAPI: any) => (next: Dispatch<AnyAction>) => (
   return next(action);
 };
 
+/**
+ * Middleware to handle subscriptions' records logic.
+ * @param {any} storeAPI - The middleware API (generic type).
+ * @returns The middleware chain.
+ */
 const subscriptionMiddleware = (storeAPI: any) => (next: Dispatch<AnyAction>) => (action: AnyAction) => {
   if (fetchRecords.fulfilled.match(action)) {
     storeAPI.dispatch(lookupSubscriptionRecords(action.payload));
@@ -37,6 +52,9 @@ const subscriptionMiddleware = (storeAPI: any) => (next: Dispatch<AnyAction>) =>
   return next(action);
 };
 
+/**
+ * The main Redux store configuration.
+ */
 export const store = configureStore({
   reducer: {
     accounts: accountsReducer,
@@ -48,6 +66,12 @@ export const store = configureStore({
     getDefaultMiddleware().concat(loggerMiddleware).concat(newsletterMiddleware).concat(subscriptionMiddleware),
 });
 
+/**
+ * Type definition for the root state of the application.
+ */
 export type RootState = ReturnType<typeof store.getState>;
 
+/**
+ * Type definition for the main dispatch function of the application.
+ */
 export type AppDispatch = typeof store.dispatch;

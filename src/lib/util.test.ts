@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for utility functions in the `util` module.
+ */
+
 import { expect, test } from 'vitest';
 
 import {
@@ -23,6 +27,9 @@ import {
   truncateAddress,
 } from './util';
 
+/**
+ * Tests for the `safeParseInt` function.
+ */
 test('safeParseInt', () => {
   expect(safeParseInt('')).toBe(0);
   expect(safeParseInt('0')).toBe(0);
@@ -30,6 +37,9 @@ test('safeParseInt', () => {
   expect(safeParseInt('foobar')).toBe(0);
 });
 
+/**
+ * Tests for the `stringToBigInt` function.
+ */
 test('stringToBigInt', () => {
   expect(stringToBigInt('')).toBe(0n);
   expect(stringToBigInt('a')).toBe(97n);
@@ -43,6 +53,9 @@ test('stringToBigInt', () => {
   expect(stringToBigInt('abcdefghi')).toBe(BigInt(1944431222027710587489n));
 });
 
+/**
+ * Tests for the `bigIntToString` function.
+ */
 test('bigIntToString', () => {
   expect(bigIntToString(0n)).toBe('');
   expect(bigIntToString(97n)).toBe('a');
@@ -56,6 +69,9 @@ test('bigIntToString', () => {
   expect(bigIntToString(1944431222027710587489n)).toBe('abcdefghi');
 });
 
+/**
+ * Tests for the `splitStringToBigInts` function.
+ */
 test('splitStringToBigInts', () => {
   expect(splitStringToBigInts('')).toEqual([]);
   expect(splitStringToBigInts('a')).toEqual([97n]);
@@ -69,11 +85,17 @@ test('splitStringToBigInts', () => {
   expect(splitStringToBigInts('abcdefghi')).toEqual([1944431222027710587489n]);
 });
 
+/**
+ * Tests for the `joinBigIntsToString` function.
+ */
 test('joinBigIntsToString', () => {
   expect(joinBigIntsToString([97n, 98n, 99n])).toBe('abc');
   expect(joinBigIntsToString([1944431222027710587489n, 1944431222027710587489n])).toBe('abcdefghiabcdefghi');
 });
 
+/**
+ * Tests for the `padArray` function.
+ */
 test('padArray', () => {
   expect(padArray([], 0)).toEqual([]);
   expect(padArray([], 1)).toEqual([BigInt(0)]);
@@ -95,6 +117,9 @@ test('padArray', () => {
   ]);
 });
 
+/**
+ * Tests for the `parseStringToBigIntArray` function.
+ */
 test('parseStringToBigIntArray', () => {
   expect(parseStringToBigIntArray('')).toEqual([]);
   expect(parseStringToBigIntArray('a')).toEqual([]);
@@ -108,12 +133,18 @@ test('parseStringToBigIntArray', () => {
   expect(parseStringToBigIntArray('abcdefghi')).toEqual([]);
 });
 
+/**
+ * Tests for the `getRandomElement` function.
+ */
 test('getRandomElement', () => {
   expect(getRandomElement([])).toBeUndefined();
   expect(getRandomElement([1])).toBe(1);
   expect(getRandomElement([1, 2])).toBeLessThan(3);
 });
 
+/**
+ * Tests for the `format_bigints` function.
+ */
 test('format_bigints', () => {
   expect(format_bigints([])).toBe('{ }');
   expect(format_bigints([0n])).toBe('{ b0: 0u128 }');
@@ -122,6 +153,9 @@ test('format_bigints', () => {
   expect(format_bigints([0n, 1n, 2n, 3n])).toBe('{ b0: 0u128, b1: 1u128, b2: 2u128, b3: 3u128 }');
 });
 
+/**
+ * Tests for the `format_u8s` function.
+ */
 test('format_u8s', () => {
   expect(format_u8s(new Uint8Array([]))).toBe('{ }');
   expect(format_u8s(new Uint8Array([0]))).toBe('{ b0: 0u8 }');
@@ -130,6 +164,9 @@ test('format_u8s', () => {
   expect(format_u8s(new Uint8Array([0, 1, 2, 3]))).toBe('{ b0: 0u8, b1: 1u8, b2: 2u8, b3: 3u8 }');
 });
 
+/**
+ * Tests for the `decode` function.
+ */
 test('decode', () => {
   expect(
     decode([
@@ -205,6 +242,9 @@ test('decode', () => {
 //   expect(decrypted_message).toBe(message);
 // });
 
+/**
+ * Tests for the `truncateAddress` function.
+ */
 test('truncateAddress', () => {
   expect(truncateAddress('')).toBe('');
   expect(truncateAddress('a')).toBe('a');

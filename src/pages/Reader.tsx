@@ -21,14 +21,22 @@ import {
   togglePrivacyMode,
 } from '@/features/newsletters/newslettersSlice';
 import { fetchRecords } from '@/features/records/recordsSlice';
-
 import dynamic from 'next/dynamic';
 
-// Export Markdown property as a dynamic component to avoid SSR errors
+/**
+ * Exports the Markdown property as a dynamic component to avoid Server Side Rendering (SSR) errors.
+ */
 const MDPreview = dynamic(() => import('@uiw/react-markdown-preview'), { ssr: false });
 
+/**
+ * The Reader component is responsible for rendering the newsletter reader interface.
+ * It also interacts with the wallet and manages the user's subscription and privacy modes.
+ */
 const Reader: FC = () => {
+  // Wallet integration hooks
   const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();
+
+  // Redux integration hooks
   const newsletter = useSelector(selectNewsletter);
   const title = useSelector(selectTitle);
   const content = useSelector(selectContent);
@@ -37,11 +45,15 @@ const Reader: FC = () => {
   const privacy_mode: boolean = useSelector(selectPrivacyMode);
   const dispatch = useDispatch<AppDispatch>();
 
-  // Get the inital secret as a random string of chacters from a whole number
+  // Component local states
   const [fee, setFee] = React.useState<string>('1.529307');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
 
+  /**
+   * This effect is responsible for checking the status of the transaction.
+   * It will continuously poll for the transaction status when a transactionId is available.
+   */
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
 
@@ -58,6 +70,10 @@ const Reader: FC = () => {
     };
   }, [transactionId]);
 
+  /**
+   * Event handler for when the user accepts an invite.
+   * This function will create a new transaction and send it to the wallet.
+   */
   const handleAcceptInvite = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -102,6 +118,10 @@ const Reader: FC = () => {
     }
   };
 
+  /**
+   * Get the status of a specific transaction.
+   * @param {string} txId - The ID of the transaction to fetch its status.
+   */
   const getTransactionStatus = async (txId: string) => {
     const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
     setStatus(status);
@@ -151,4 +171,5 @@ const Reader: FC = () => {
   );
 };
 
+// Export the Reader component as the default.
 export default Reader;
