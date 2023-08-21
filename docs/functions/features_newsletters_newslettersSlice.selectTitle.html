@@ -20,17 +20,32 @@
 <ul class="tsd-signatures">
 <li class="tsd-signature tsd-anchor-link" id="selectTitle"><span class="tsd-kind-call-signature">select<wbr/>Title</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">state</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><a href="#selectTitle" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></li>
 <li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Select the title from the newsletter state.</p>
+</div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
 <h5><span class="tsd-kind-parameter">state</span>: <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">newsletters</span><span class="tsd-signature-symbol">: </span><a href="../types/features_newsletters_newslettersSlice.NewsletterState.html" class="tsd-signature-type tsd-kind-type-alias">NewsletterState</a><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h5>
+<div class="tsd-comment tsd-typography"></div>
 <ul class="tsd-parameters">
 <li class="tsd-parameter">
 <h5><span class="tsd-kind-property">newsletters</span><span class="tsd-signature-symbol">: </span><a href="../types/features_newsletters_newslettersSlice.NewsletterState.html" class="tsd-signature-type tsd-kind-type-alias">NewsletterState</a></h5></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><ul>
+<li>title
+If privacy mode is enabled, then the title is the ciphertext.
+Otherwise, the title is the decrypted ciphertext.
+If the newsletter is in draft mode, then the title is the draft title.
+Otherwise, the title is the newsletter title.
+If the newsletter is in draft mode and privacy mode is enabled, then the title is the draft title ciphertext.
+Otherwise, the title is the draft title decrypted ciphertext.
+If the newsletter is in draft mode and privacy mode is disabled, then the title is the draft title decrypted.
+Otherwise, the title is the newsletter title decrypted.</li>
+</ul>
+
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/bf03279/src/features/newsletters/newslettersSlice.ts#L726">src/features/newsletters/newslettersSlice.ts:726</a></li></ul></aside></li></ul></section></div>
+<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/4be7e5e/src/features/newsletters/newslettersSlice.ts#L769">src/features/newsletters/newslettersSlice.ts:769</a></li></ul></aside></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

@@ -17,17 +17,34 @@
 <li><a href="features_accounts_accountsSlice.AccountState.html">AccountState</a></li></ul>
 <h1>Type alias AccountState</h1></div>
 <div class="tsd-signature"><span class="tsd-kind-type-alias">Account<wbr/>State</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">error</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">publicKey</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">status</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;uninitialized&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;loading&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;idle&quot;</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p>The shape of the Account state in the Redux store.</p>
+</div>
 <div class="tsd-type-declaration">
 <h4>Type declaration</h4>
 <ul class="tsd-parameters">
 <li class="tsd-parameter">
-<h5><span class="tsd-kind-property">error</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5></li>
+<h5><span class="tsd-kind-property">error</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
+<div class="tsd-comment tsd-typography"><p>An error message that can occur during any operations.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
 <li class="tsd-parameter">
-<h5><span class="tsd-kind-property">public<wbr/>Key</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5></li>
+<h5><span class="tsd-kind-property">public<wbr/>Key</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>The public key of the user&#39;s account.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
 <li class="tsd-parameter">
-<h5><span class="tsd-kind-property">status</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;uninitialized&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;loading&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;idle&quot;</span></h5></li></ul></div><aside class="tsd-sources">
+<h5><span class="tsd-kind-property">status</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;uninitialized&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;loading&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;idle&quot;</span></h5>
+<div class="tsd-comment tsd-typography"><p>Represents the loading state of the account.</p>
 <ul>
-<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/bf03279/src/features/accounts/accountsSlice.ts#L3">src/features/accounts/accountsSlice.ts:3</a></li></ul></aside></div>
+<li><code>uninitialized</code>: The state before any operations are performed.</li>
+<li><code>loading</code>: When an operation related to the account is ongoing.</li>
+<li><code>idle</code>: When no operations are in progress.</li>
+</ul>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/4be7e5e/src/features/accounts/accountsSlice.ts#L6">src/features/accounts/accountsSlice.ts:6</a></li></ul></aside></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
