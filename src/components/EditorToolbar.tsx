@@ -21,17 +21,33 @@ import {
 } from '@/features/subscriptions/subscriptionsSlice';
 import { truncateAddress } from '@/lib/util';
 
+/**
+ * EditorToolbar provides the user with a set of actions and interfaces to manage
+ * newsletters and their subscribers.
+ *
+ * The toolbar includes functionalities like creating new drafts, fetching example newsletters,
+ * selecting existing newsletters, and managing subscribers for a selected newsletter.
+ */
 const EditorToolbar: FC = () => {
+  // Wallet integration hooks
   const { connected, publicKey } = useWallet();
+
+  // Redux integration hooks
   const newsletters: NewsletterRecord[] = useSelector(selectUnspentNewsletters);
   const newsletter: NewsletterRecord = useSelector(selectNewsletter);
   const subscribers: SubscriberList = useSelector(selectNewsletterSubscribers);
   const selected_recipients: DeliveryDraft[] = useSelector(selectRecipients);
   const dispatch = useDispatch<AppDispatch>();
 
+  // Component local states
   const [isToggleAll, setIsToggleAll] = useState(false);
   const [isSubscriber, setIsSubscriber] = useState(false);
 
+  /**
+   * This effect determines if the current user is a subscriber and updates the state accordingly.
+   * The user is considered a subscriber if their publicKey matches either the owner
+   * of the newsletter or any of its existing subscribers.
+   */
   useEffect(() => {
     if (newsletter && newsletter.id && subscribers[newsletter.data.id]) {
       // Determine if the individual_public_key is in subscribers.
@@ -50,7 +66,13 @@ const EditorToolbar: FC = () => {
     }
   }, [newsletter, subscribers, publicKey]);
 
-  const isRecipientSelected = (subscriber: SharedSecretMapping) => {
+  /**
+   * Determines if a subscriber is already selected as a recipient.
+   *
+   * @param {SharedSecretMapping} subscriber - The subscriber to check.
+   * @returns {boolean} - True if the subscriber is selected, otherwise false.
+   */
+  const isRecipientSelected = (subscriber: SharedSecretMapping): boolean => {
     const recipient: string = subscriber.secret.recipient as string;
     return selected_recipients.some((item) => item.recipient === recipient);
   };
@@ -65,6 +87,12 @@ const EditorToolbar: FC = () => {
     dispatch(setSelectedRecipients(updatedRecipients));
   };
 
+  /**
+   * Handles the change event for subscriber checkboxes.
+   *
+   * @param {SharedSecretMapping} subscriber - The subscriber associated with the checkbox.
+   * @returns {DeliveryDraft} - The delivery draft associated with the subscriber.
+   */
   const deriveDeliveryDraft = (subscriber: SharedSecretMapping): DeliveryDraft => {
     const recipient: string = subscriber.secret.recipient as string;
     const shared_public_key: string = subscriber.secret.shared_public_key as string;

@@ -8,7 +8,6 @@ afterEach(() => {
   cleanup();
 });
 
-// This is a ts file. You can use ts syntax here.
 const customRender = (ui: React.ReactElement, options = {}) => {
   render(ui, {
     wrapper: ({ children }: PropsWithChildren<object>): JSX.Element => {

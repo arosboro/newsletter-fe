@@ -11,16 +11,30 @@ nacl_factory.instantiate((instance: nacl_factory.Nacl) => {
   nacl = instance;
 });
 
+/**
+ * Represents a cipher with hexadecimal encoding.
+ */
 export interface HexCipher {
   ciphertext: string;
   nonce: string;
 }
 
+/**
+ * Safely parses a string into an integer.
+ * If the parsed value is NaN, returns 0.
+ * @param value - The string value to parse.
+ * @returns - Parsed integer or 0.
+ */
 export function safeParseInt(value: string): number {
   const parsedValue = parseInt(value, 10);
   return isNaN(parsedValue) ? 0 : parsedValue;
 }
 
+/**
+ * Converts a string into a bigint value.
+ * @param input - The input string.
+ * @returns - Corresponding bigint value.
+ */
 export function stringToBigInt(input: string): bigint {
   const encoder = new TextEncoder();
   const encodedBytes = encoder.encode(input);
@@ -35,6 +49,11 @@ export function stringToBigInt(input: string): bigint {
   return bigIntValue;
 }
 
+/**
+ * Converts a bigint value to its string representation.
+ * @param bigIntValue - The bigint value.
+ * @returns - String representation of the bigint.
+ */
 export function bigIntToString(bigIntValue: bigint): string {
   const bytes: number[] = [];
   let tempBigInt = bigIntValue;
@@ -50,6 +69,11 @@ export function bigIntToString(bigIntValue: bigint): string {
   return asciiString;
 }
 
+/**
+ * Splits a string into chunks and converts each chunk into a bigint.
+ * @param input - The input string.
+ * @returns - An array of bigints.
+ */
 export function splitStringToBigInts(input: string): bigint[] {
   const chunkSize = 16; // Chunk size to split the string
   const numChunks = Math.ceil(input.length / chunkSize);
@@ -64,6 +88,11 @@ export function splitStringToBigInts(input: string): bigint[] {
   return bigInts;
 }
 
+/**
+ * Joins an array of bigints into a string.
+ * @param bigInts - An array of bigints.
+ * @returns - Combined string representation.
+ */
 export function joinBigIntsToString(bigInts: bigint[]): string {
   let result = '';
 
@@ -75,6 +104,12 @@ export function joinBigIntsToString(bigInts: bigint[]): string {
   return result;
 }
 
+/**
+ * Pads an array of bigints to a specified length.
+ * @param array - The array to be padded.
+ * @param length - The desired length of the array.
+ * @returns - The padded array.
+ */
 export function padArray(array: bigint[], length: number): bigint[] {
   const paddingLength = length - array.length;
   if (paddingLength <= 0) {
@@ -86,6 +121,11 @@ export function padArray(array: bigint[], length: number): bigint[] {
   return paddedArray;
 }
 
+/**
+ * Parses a string into an array of bigints.
+ * @param input - The input string.
+ * @returns - An array of bigints.
+ */
 export function parseStringToBigIntArray(input: string): bigint[] {
   const bigIntRegex = /([0-9]+)u128/g;
   const matches = input.match(bigIntRegex);
@@ -98,11 +138,21 @@ export function parseStringToBigIntArray(input: string): bigint[] {
   return bigInts;
 }
 
+/**
+ * Fetches a random element from a given list.
+ * @param list - The input list.
+ * @returns - A random element from the list.
+ */
 export function getRandomElement<T>(list: T[]): T {
   const randomIndex = Math.floor(Math.random() * list.length);
   return list[randomIndex];
 }
 
+/**
+ * Adds data to IPFS.
+ * @param data - The data to be added to IPFS.
+ * @returns - Response from IPFS or undefined in case of an error.
+ */
 export async function ipfsAdd(data: string) {
   try {
     const formData = new FormData();
@@ -128,6 +178,11 @@ export async function ipfsAdd(data: string) {
   }
 }
 
+/**
+ * Formats an array of bigints.
+ * @param bigints - An array of bigints to a specific format to be used in an Aleo Transaction.
+ * @returns - Formatted string.
+ */
 export const format_bigints = (bigints: bigint[]) => {
   let result = '{ ';
   for (let i = 0; i < bigints.length; i++) {
@@ -138,6 +193,11 @@ export const format_bigints = (bigints: bigint[]) => {
   return result;
 };
 
+/**
+ * Formats a Uint8Array or string to a specific format to be used in an Aleo Transaction.
+ * @param u8s - Uint8Array or string to format.
+ * @returns - Formatted string.
+ */
 export const format_u8s = (u8s: Uint8Array | string) => {
   if (typeof u8s === 'string') {
     u8s = nacl_from_hex(u8s);
@@ -151,6 +211,11 @@ export const format_u8s = (u8s: Uint8Array | string) => {
   return result;
 };
 
+/**
+ * Removes content from IPFS (indirectly by unpinning it).
+ * @param hash - The hash of the content to be removed.
+ * @returns - Response from IPFS or undefined in case of an error.
+ */
 export async function ipfsRm(hash: string) {
   try {
     const authorization =
@@ -173,6 +238,11 @@ export async function ipfsRm(hash: string) {
   }
 }
 
+/**
+ * Converts int to string assuming utf8 encoding.
+ * @param bytes - The bytes to be converted.
+ * @returns - The converted string.
+ */
 export const decode = (bytes: string[] | string): string => {
   if (typeof bytes === 'string') {
     bytes = [bytes];
@@ -185,7 +255,7 @@ export const decode = (bytes: string[] | string): string => {
 };
 
 /**
- *
+ * Converts hex encoded Uint8Array to string.
  * @param bytes {
  *   "b0": "247u8.private",
  *   "b1": "236u8.private",
@@ -230,12 +300,25 @@ export const decode_u8 = (bytes: string[] | string): string => {
   return nacl.to_hex(chunk_decoded);
 };
 
+/**
+ * Generates a random 64-bit integer.
+ * @returns { bigint } - The random 64-bit integer.
+ * @remarks
+ * This function is used to generate a random seed for the group in past iterations of the app.
+ * It is no longer used. I would not trust it to generate secure random seeds.
+ * It is kept here for reference.
+ */
 export const initSecret = (): bigint => {
   // Calcuate a 64-bit random integer and subtract 4 bytes
   const seed = BigInt(Math.floor(Math.random() * 2 ** 64)) - BigInt(4);
   return seed;
 };
 
+/**
+ * Converts hex encoded string to Uint8Array.
+ * @param hex - The hex encoded string.
+ * @returns Uint8Array - The Uint8Array.
+ */
 export const nacl_from_hex = (hex: string): Uint8Array => {
   if (!nacl || hex.length === 0) {
     return new Uint8Array();
@@ -346,6 +429,11 @@ export const decryptMessage = (
   return plaintext ? nacl.decode_utf8(plaintext) : null;
 };
 
+/**
+ * Load content from IPFS which contains JSON or text.
+ * @param path - The path to the content on IPFS.
+ * @returns string - The content.
+ */
 export const resolve = async (path: string) => {
   const cipher_text = await axios.get(`https://ipfs.io/ipfs/${path}`).then((response) => {
     return response.data;
@@ -353,6 +441,11 @@ export const resolve = async (path: string) => {
   return cipher_text;
 };
 
+/**
+ * Take an Aleo address and shorten it to first four and last four characters.
+ * @param recipient - The Aleo address to be shortened.
+ * @returns string - The shortened address.
+ */
 export const truncateAddress = (recipient: string): string => {
   if (recipient.length <= 8) {
     return recipient; // No need to truncate if length is 8 or less

@@ -709,72 +709,216 @@ export const {
   draftSelectedRecipients,
 } = newslettersSlice.actions;
 
+/**
+ * Select the newsletter list from the newsletter state.
+ * @param state
+ * @returns
+ */
 const selectNewsletterList = (state: { newsletters: NewsletterState }) => state.newsletters.list;
 
+/**
+ * Select the title nonce from the newsletter state.
+ * @param state
+ * @returns {string} - title_nonce
+ */
 export const selectTitleNonce = (state: { newsletters: NewsletterState }) => state.newsletters.title_nonce;
 
+/**
+ * Select the template nonce from the newsletter state.
+ * @param state
+ * @returns {string} - template_nonce
+ */
 export const selectTemplateNonce = (state: { newsletters: NewsletterState }) => state.newsletters.template_nonce;
 
+/**
+ * Select the content nonce from the newsletter state.
+ * @param state
+ * @returns {string} - content_nonce
+ */
 export const selectContentNonce = (state: { newsletters: NewsletterState }) => state.newsletters.content_nonce;
 
+/**
+ * Select the raw newsletter from the newsletter state.
+ * @param state
+ * @returns {NewsletterRecord} - newsletter as received from leo wallet adapter.
+ */
 export const selectRawNewsletter = (state: { newsletters: NewsletterState }): NewsletterRecord =>
   state.newsletters.raw_records[state.newsletters.newsletter.id];
 
+/**
+ * Select the loading status from the newsletter state.
+ * @param state
+ * @returns {boolean} - true if loading, false otherwise.
+ */
 export const selectIsLoading = (state: { newsletters: NewsletterState }): boolean =>
   state.newsletters.status === 'loading';
 
+/**
+ * Select the title from the newsletter state.
+ * @param state
+ * @returns {string} - title
+ * If privacy mode is enabled, then the title is the ciphertext.
+ * Otherwise, the title is the decrypted ciphertext.
+ * If the newsletter is in draft mode, then the title is the draft title.
+ * Otherwise, the title is the newsletter title.
+ * If the newsletter is in draft mode and privacy mode is enabled, then the title is the draft title ciphertext.
+ * Otherwise, the title is the draft title decrypted ciphertext.
+ * If the newsletter is in draft mode and privacy mode is disabled, then the title is the draft title decrypted.
+ * Otherwise, the title is the newsletter title decrypted.
+ */
 export const selectTitle = (state: { newsletters: NewsletterState }): string => state.newsletters.title as string;
 
+/**
+ * Select the template from the newsletter state.
+ * @param state
+ * @returns {string} - template
+ * If privacy mode is enabled, then the template is the ciphertext.
+ * Otherwise, the template is the decrypted ciphertext.
+ * If the newsletter is in draft mode, then the template is the draft template.
+ * Otherwise, the template is the newsletter template.
+ * If the newsletter is in draft mode and privacy mode is enabled, then the template is the draft template ciphertext.
+ * Otherwise, the template is the draft template decrypted ciphertext.
+ * If the newsletter is in draft mode and privacy mode is disabled, then the template is the draft template decrypted.
+ * Otherwise, the template is the newsletter template decrypted.
+ */
 export const selectTemplate = (state: { newsletters: NewsletterState }): string => state.newsletters.template as string;
 
+/**
+ * Select the content from the newsletter state.
+ * @param state
+ * @returns {string} - content
+ * If privacy mode is enabled, then the content is the ciphertext.
+ * Otherwise, the content is the decrypted ciphertext.
+ * If the newsletter is in draft mode, then the content is the draft content.
+ * Otherwise, the content is the newsletter content.
+ * If the newsletter is in draft mode and privacy mode is enabled, then the content is the draft content ciphertext.
+ * Otherwise, the content is the draft content decrypted ciphertext.
+ * If the newsletter is in draft mode and privacy mode is disabled, then the content is the draft content decrypted.
+ * Otherwise, the content is the newsletter content decrypted.
+ */
 export const selectContent = (state: { newsletters: NewsletterState }): string => state.newsletters.content as string;
 
+/**
+ * Select the title ciphertext from the newsletter state.
+ * @param state
+ * @returns {HexCipher} - title_ciphertext
+ */
 export const selectTitleCiphertext = (state: { newsletters: NewsletterState }): HexCipher =>
   state.newsletters.title_ciphertext;
 
+/**
+ * Select the template ciphertext from the newsletter state.
+ * @param state
+ * @returns {HexCipher} - template_ciphertext
+ */
 export const selectTemplateCiphertext = (state: { newsletters: NewsletterState }): HexCipher =>
   state.newsletters.template_ciphertext;
 
+/**
+ * Select the content ciphertext from the newsletter state.
+ * @param state
+ * @returns {HexCipher} - content_ciphertext
+ */
 export const selectContentCiphertext = (state: { newsletters: NewsletterState }): HexCipher =>
   state.newsletters.content_ciphertext;
 
+/**
+ * Select the toggle for Template Mode from the newsletter state.
+ * @param state
+ * @returns {boolean} - template_mode
+ */
 export const selectTemplateMode = (state: { newsletters: NewsletterState }): boolean => state.newsletters.template_mode;
 
+/**
+ * Select the toggle for Privacy Mode from the newsletter state.
+ * @param state
+ * @returns {boolean} - privacy_mode
+ */
 export const selectPrivacyMode = (state: { newsletters: NewsletterState }): boolean => state.newsletters.privacy_mode;
 
+/**
+ * Select the current selected Newsletter that the user is interacting with from the newsletter state.
+ * @param state
+ * @returns {NewsletterRecord} - newsletter
+ */
 export const selectNewsletter = (state: { newsletters: NewsletterState }) => state.newsletters.newsletter;
 
+/**
+ * Select the current selected Newsletters which are not used in a transaction from the newsletter state.
+ * @param state
+ * @returns {NewsletterRecord[]} - unspent newsletters
+ */
 export const selectUnspentNewsletters = createSelector(selectNewsletterList, (newsletter_list) => {
   return Object.values(newsletter_list).filter((record) => !record.spent);
 });
 
+/**
+ * Select the current selected Newsletters which are used in a transaction from the newsletter state.
+ * @param state
+ * @returns {NewsletterRecord[]} - spent newsletters
+ */
 export const selectSpentNewsletters = createSelector(selectNewsletterList, (newsletter_list) => {
   return Object.values(newsletter_list).filter((record) => record.spent);
 });
 
-// publicKey comes from the accountsSlice.ts.
-// if data.op is not equal to the public key and data.base = true, then it is an invite.
-const selectInvites = (state: { newsletters: NewsletterState }) => {
+/**
+ * Select any open invitation Newsletters which the user has received from the newsletter state.
+ * @param state
+ * @returns {NewsletterRecord[]} - open invitation newsletters
+ */
+const selectInvites = (state: { newsletters: NewsletterState }): NewsletterRecord[] => {
   const publicKey = state.newsletters.public_key;
   return Object.values(state.newsletters.list).filter((record) => {
     return !record.spent && record.data.op !== publicKey && record.data.revision;
   });
 };
 
-export const selectUnspentInvites = createSelector(selectInvites, (invites) => {
+/**
+ * Select any open invitation Newsletters which the user has received and not yet accepted from the newsletter state.
+ * @param state
+ * @returns {NewsletterRecord[]} - unspent invitation newsletters
+ */
+export const selectUnspentInvites = createSelector(selectInvites, (invites): NewsletterRecord[] => {
   return invites.filter((record) => !record.spent);
 });
 
-export const selectIssues = (state: { newsletters: NewsletterState }) => state.newsletters.issues;
+/**
+ * Select any delivered issues for the given Newsletter which exists in the newsletter state.
+ * @param state
+ * @returns {DeliveryDraft[]} - delivered issues
+ */
+export const selectIssues = (state: { newsletters: NewsletterState }): DeliveryDraft[] => state.newsletters.issues;
 
+/**
+ * Select the Group Symmetric Key used to decrypt individual newsletter related records and mapping data.
+ * @param state
+ * @returns {string} - group_symmetric_key
+ */
 export const selectGroupSecret = (state: { newsletters: NewsletterState }) => state.newsletters.group_symmetric_key;
 
+/**
+ * Select the Individual Private Key used to encrypt/decrypt DeliveryDrafts.
+ * @param state
+ * @returns {string} - individual_private_key
+ */
 export const selectIndividualPrivateKey = (state: { newsletters: NewsletterState }) =>
   state.newsletters.individual_private_key;
 
+/**
+ * Select the Individual Public Key used to encrypt/decrypt DeliveryDrafts.
+ * @param state
+ * @returns {string} - individual_public_key
+ */
 export const selectIndividualPublicKey = (state: { newsletters: NewsletterState }) =>
   state.newsletters.individual_public_key;
 
-export const selectRecipients = (state: { newsletters: NewsletterState }) => state.newsletters.selected_recipients;
+/**
+ * Select the selected recipients from the newsletter state.
+ * @param state
+ * @returns {DeliveryDraft[]} - selected_recipients
+ */
+export const selectRecipients = (state: { newsletters: NewsletterState }): DeliveryDraft[] =>
+  state.newsletters.selected_recipients;
 
+/** Export the reducer to be combined at the store level. */
 export default newslettersSlice.reducer;

@@ -16,6 +16,13 @@
 <li><a href="../modules/containers_ErrorBoundary.html">containers/ErrorBoundary</a></li>
 <li><a href="containers_ErrorBoundary.default.html">default</a></li></ul>
 <h1>Class default</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p><code>ErrorBoundary</code> is a higher-order component that captures JavaScript errors anywhere
+in their child component tree, logs those errors, and displays a fallback UI.</p>
+<p>This component is useful for ensuring that the entire application does not crash
+due to unhandled errors.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
@@ -23,7 +30,7 @@
 <ul class="tsd-hierarchy">
 <li><span class="target">default</span></li></ul></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/bf03279/src/containers/ErrorBoundary.tsx#L11">src/containers/ErrorBoundary.tsx:11</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/7d99ae9/src/containers/ErrorBoundary.tsx#L26">src/containers/ErrorBoundary.tsx:26</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -45,15 +52,21 @@
 <ul class="tsd-signatures">
 <li class="tsd-signature tsd-anchor-link" id="constructor.new_default"><span class="tsd-kind-constructor-signature">new default</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">props</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="containers_ErrorBoundary.default.html" class="tsd-signature-type tsd-kind-class">default</a><a href="#constructor.new_default" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Creates a new instance of the ErrorBoundary component.</p>
+</div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">props</span>: <span class="tsd-signature-type ">Props</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="containers_ErrorBoundary.default.html" class="tsd-signature-type tsd-kind-class">default</a></h4><aside class="tsd-sources">
+<h5><span class="tsd-kind-parameter">props</span>: <span class="tsd-signature-type ">Props</span></h5>
+<div class="tsd-comment tsd-typography"><p>Props passed to the component.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="containers_ErrorBoundary.default.html" class="tsd-signature-type tsd-kind-class">default</a></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides Component&lt;Props, State&gt;.constructor</p>
 <ul>
-<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/bf03279/src/containers/ErrorBoundary.tsx#L12">src/containers/ErrorBoundary.tsx:12</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/7d99ae9/src/containers/ErrorBoundary.tsx#L32">src/containers/ErrorBoundary.tsx:32</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member"><a id="componentDidCatch" class="tsd-anchor"></a>
@@ -61,26 +74,38 @@
 <ul class="tsd-signatures">
 <li class="tsd-signature tsd-anchor-link" id="componentDidCatch.componentDidCatch-1"><span class="tsd-kind-call-signature">component<wbr/>Did<wbr/>Catch</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">error</span>, <span class="tsd-kind-parameter">info</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#componentDidCatch.componentDidCatch-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Catches errors that occur in the child components and updates the component state.</p>
+</div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">error</span>: <span class="tsd-signature-type ">Error</span></h5></li>
+<h5><span class="tsd-kind-parameter">error</span>: <span class="tsd-signature-type ">Error</span></h5>
+<div class="tsd-comment tsd-typography"><p>The thrown error.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
 <li>
-<h5><span class="tsd-kind-parameter">info</span>: <span class="tsd-signature-type ">ErrorInfo</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<h5><span class="tsd-kind-parameter">info</span>: <span class="tsd-signature-type ">ErrorInfo</span></h5>
+<div class="tsd-comment tsd-typography"><p>Additional information about what caused the error.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides Component.componentDidCatch</p>
 <ul>
-<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/bf03279/src/containers/ErrorBoundary.tsx#L17">src/containers/ErrorBoundary.tsx:17</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/7d99ae9/src/containers/ErrorBoundary.tsx#L43">src/containers/ErrorBoundary.tsx:43</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="render" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>render</span><a href="#render" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
 <li class="tsd-signature tsd-anchor-link" id="render.render-1"><span class="tsd-kind-call-signature">render</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Element</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Iterable</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">ReactNode</span><span class="tsd-signature-symbol">&gt;</span><a href="#render.render-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Element</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Iterable</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">ReactNode</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<div class="tsd-comment tsd-typography"><p>Renders the fallback UI in case of an error or the child components if everything is fine.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Element</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Iterable</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">ReactNode</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides Component.render</p>
 <ul>
-<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/bf03279/src/containers/ErrorBoundary.tsx#L22">src/containers/ErrorBoundary.tsx:22</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/arosboro/newsletter-fe/blob/7d99ae9/src/containers/ErrorBoundary.tsx#L51">src/containers/ErrorBoundary.tsx:51</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

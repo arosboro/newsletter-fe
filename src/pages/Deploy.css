@@ -1,18 +1,26 @@
 .program-deployed {
-  /* relative flex w-full flex-col rounded-full md:w-auto text-center p-8 */
+  /* Styling for the deployed program section */
+  /* Positioned relative to its closest ancestor */
   position: relative;
+  /* Display as a flex container */
   display: flex;
+  /* Stack its children vertically */
   flex-direction: column;
+  /* Center its children both horizontally and vertically */
   align-items: center;
   justify-content: center;
+  /* Circle-like border radius */
   border-radius: 9999px;
+  /* Padding of 2rem on all sides */
   padding: 2rem;
+  /* Take full width on mobile and adjust on larger screens */
   width: 100%;
+  /* Margin at the bottom for spacing */
   margin-bottom: 1rem;
 }
 
 .program-form {
-  /* relative flex w-full flex-col rounded-full md:w-auto */
+  /* Styling for the program form section */
   position: relative;
   display: flex;
   flex-direction: column;
@@ -23,41 +31,57 @@
 }
 
 label {
-  /* flex w-full items-center justify-between py-4 */
+  /* General label styling */
   display: flex;
   width: 100%;
+  /* Align its children vertically at the center and spread them horizontally */
   align-items: center;
   justify-content: space-between;
+  /* Padding at the top and bottom */
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
 
 .program-input {
-  /* w-10/12 appearance-none rounded-lg border-2 border-gray-200 bg-transparent py-1 text-sm tracking-tighter dark:text-gray-600 outline-none transition-all placeholder:text-gray-600 focus:border-gray-900 ltr:pr-5 ltr:pl-10 rtl:pr-10 dark:border-gray-600 dark:placeholder:text-gray-500 dark:focus:border-gray-500 */
+  /* Input field within the program */
+  /* Width is set to 83.33% of its parent container */
   width: 83.333333%;
   height: 60.333333vh;
+  /* Removes browser-specific styling */
   appearance: none;
+  /* Rounded corners */
   border-radius: 0.5rem;
+  /* Border properties */
   border-width: 2px;
   border-color: #e2e8f0;
+  /* Transparent background */
   background-color: transparent;
+  /* Padding on top and bottom */
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
+  /* Font size and letter spacing */
   font-size: 0.875rem;
   letter-spacing: 0.05rem;
+  /* Remove default focus outline */
   outline: none;
+  /* Smooth transition for the border color */
   transition: border-color 0.25s;
+  /* Border color */
   border-color: #1a202c;
+  /* Padding on left and right */
   padding-right: 1.25rem;
   padding-left: 1.25rem;
 }
 
 .program-deploy,
 .program-deployed {
-  /* flex items-center justify-center */
+  /* Shared styling for both deploy and deployed sections */
   display: flex;
+  /* Max width of 66% of the parent container */
   max-width: 66%;
+  /* Allow the item to grow */
   flex-grow: 999;
+  /* Center its children both horizontally and vertically */
   align-items: center;
   justify-content: center;
 }

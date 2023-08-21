@@ -9,18 +9,31 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectRawNewsletter } from '@/features/newsletters/newslettersSlice';
 import { fetchRecords } from '@/features/records/recordsSlice';
 
+/**
+ * AddSubscriber component allows users to add subscribers to a newsletter.
+ *
+ * This component provides an interface to specify subscriber address and fee,
+ * and send an invite using the Aleo wallet adapter.
+ */
 export const AddSubscriber = () => {
+  // Wallet integration hooks
   const { connected, wallet, publicKey, requestTransaction, requestRecords } = useWallet();
 
+  // Redux integration hooks
   const record = useSelector(selectRawNewsletter);
   const dispatch = useDispatch<AppDispatch>();
 
+  // Component local states
   const [invite_mode, setIsInviteMode] = React.useState<boolean>(false);
   const [address, setAddress] = React.useState<string>('');
   const [fee, setFee] = React.useState<string>('1.508807');
   const [transactionId, setTransactionId] = React.useState<string | undefined>();
   const [status, setStatus] = React.useState<string | undefined>();
 
+  /**
+   * Effect to poll transaction status.
+   * The effect will continuously poll for the transaction status when a transactionId is available.
+   */
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
 
@@ -37,6 +50,11 @@ export const AddSubscriber = () => {
     };
   }, [transactionId]);
 
+  /**
+   * Handle form submission to create a new transaction.
+   *
+   * @param {ChangeEvent<HTMLFormElement>} event - The form submission event.
+   */
   const handleSubmit = async (event: ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();
@@ -69,6 +87,11 @@ export const AddSubscriber = () => {
     }
   };
 
+  /**
+   * Get the status of a specific transaction.
+   *
+   * @param {string} txId - The ID of the transaction to fetch its status.
+   */
   const getTransactionStatus = async (txId: string) => {
     const status = await (wallet?.adapter as LeoWalletAdapter).transactionStatus(txId);
     setStatus(status);

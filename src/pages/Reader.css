@@ -1,71 +1,68 @@
+/* --- App Header Styles --- */
+
+/* Main header container */
 .App-header {
-  flex-basis: 100%;
-  display: flex;
-  align-items: center;
-  vertical-align: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  flex-basis: 100%; /* This sets the main size of the header to be 100% of the parent's size */
+  display: flex; /* Uses flexbox layout for child elements */
+  align-items: center; /* Vertically aligns the child elements to the center */
+  gap: 1rem; /* Introduces a space of 1rem between direct child elements */
+  margin-bottom: 1rem; /* Margin at the bottom of the header */
 }
 
-/* A text input as large as both App-sidebar and App-body */
+/* Styling for a heading (h1) directly within the header */
 .App-header > h1 {
-  width: auto;
-  gap: 1rem;
-  margin-block-end: 16px;
-  margin-block-start: 16px;
-  border: 0px solid rgba(255, 255, 255, 0);
-  border-radius: 0.5rem;
-  background-color: transparent;
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 500;
-  line-height: 1.1;
-  transition: border-color 0.25s;
-}
-.App-header-input:focus {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-.App-header-input:focus-visible {
-  border-color: #646cff;
-}
-.App-header-input::placeholder {
-  color: #888;
-}
-.App-header-input:hover {
-  border-color: #646cff;
-}
-.App-header-input:hover::placeholder {
-  color: #aaa;
+  width: auto; /* The width of the heading adjusts to the content */
+  gap: 1rem; /* If it was a grid container, there'd be a gap of 1rem between grid children */
+  margin-block-end: 16px; /* Margin at the bottom of the heading */
+  margin-block-start: 16px; /* Margin at the top of the heading */
+  border: 0px solid rgba(255, 255, 255, 0); /* No visible border */
+  border-radius: 0.5rem; /* Slightly rounded corners, though not visible due to no border */
+  background-color: transparent; /* Transparent background */
+  color: #fff; /* Text color is white */
+  font-size: 1.5rem; /* Font size for the heading */
+  font-weight: 500; /* Medium font weight */
+  line-height: 1.1; /* Line height for the text */
+  transition: border-color 0.25s; /* Smooth transition for border color changes */
 }
 
+/* --- App Sidebar Styles --- */
+
+/* The sidebar styling */
 .App-sidebar {
-  flex-basis: 15rem;
-  flex-grow: 1;
-  position: relative;
+  flex-basis: 15rem; /* Sets a base size for the sidebar */
+  flex-grow: 1; /* Allows the sidebar to grow if there's available space */
+  position: relative; /* Sets positioning context for absolute positioned children */
 }
 
+/* Styling for a button within the navigation/sidebar list item */
 .App-nav-list-item-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0 0.5em;
-  height: 1.5em;
-  line-height: 1em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+  border-radius: 8px; /* Rounded corners for the button */
+  border: 1px solid transparent; /* Transparent border */
+  padding: 0 0.5em; /* Padding on the left and right of the button */
+  height: 1.5em; /* Height of the button */
+  line-height: 1em; /* Line height for the button's text */
+  font-size: 1em; /* Font size for the button's text */
+  font-weight: 500; /* Medium font weight */
+  font-family: inherit; /* Inherits the font family from its parent */
+  background-color: #1a1a1a; /* Dark grayish background color */
+  cursor: pointer; /* Cursor changes to a pointer when hovering over the button */
+  transition: border-color 0.25s; /* Smooth transition for border color changes */
 }
 
+/* --- App Body Styles --- */
+
+/* Main content container */
 .App-body {
-  flex-basis: 0;
-  flex-grow: 999;
-  min-width: 66%;
-  display: flex;
-  flex-direction: column;
+  flex-basis: 0; /* Starting size is 0, allowing it to grow with flex-grow */
+  flex-grow: 999; /* Allows the body to grow and take up a lot of available space */
+  min-width: 66%; /* Ensures the body takes at least 66% of the parent's width */
+  display: flex; /* Uses flexbox layout for child elements */
+  flex-direction: column; /* Child elements are stacked vertically */
 }
 
+/* --- App Footer Styles --- */
+
+/* Footer container */
 .App-footer {
-  flex-basis: 100%;
+  flex-basis: 100%; /* Ensures the footer takes up 100% of the parent's size */
 }

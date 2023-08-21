@@ -42,8 +42,8 @@ If it says Obey, the contract has been deployed and a link is provided to review
 
 ### Components, Features, Lib, Pages
 
-See TypeDoc in docs folder. It is served on github pages at https://arosboro.github.io/newsletter-fe/
+See TypeDoc generated documentation in docs folder. It is served on github pages at https://arosboro.github.io/newsletter-fe/
 
 ### Tests
 
-A percentage of the application has coverage by integration testing so that it can be confirmed to be working. And rapidly deployed to production after tests pass. These are initiated through GitHub actions.
+A percentage of the application has coverage by integration testing so that it can be confirmed to be working, and rapidly deployed to production after tests pass. These are initiated through GitHub actions.

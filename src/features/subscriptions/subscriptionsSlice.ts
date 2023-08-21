@@ -8,6 +8,9 @@ import { decode, decode_u8, decryptGroupMessage, resolve } from '@/lib/util';
 // @ts-ignore
 import init, { cantors_pairing } from 'newsletter_worker';
 
+/**
+ * The SubscriptionRecord is a representation of Subscription Aleo Records.
+ */
 export interface SubscriptionRecord {
   id: string;
   owner: string;
@@ -22,11 +25,22 @@ export interface SubscriptionRecord {
   };
 }
 
+/**
+ * The SharedSecret is a representation of the SharedSecret Aleo Mapping.
+ */
 export interface SharedSecret {
   shared_public_key: string[] | string;
   recipient: string[] | string;
 }
 
+/**
+ * The SharedSecretMapping is a representation of the SharedSecret Along with
+ * supporting meta data to accompany the SubscriptionRecord and NewsletterRecord.
+ * This is used to decrypt the NewsletterRecord.
+ * @see NewsletterRecord
+ * @see SubscriptionRecord
+ * @see SharedSecret
+ */
 export interface SharedSecretMapping {
   sequence: string;
   subscription: SubscriptionRecord | undefined;
@@ -34,10 +48,24 @@ export interface SharedSecretMapping {
   secret: SharedSecret;
 }
 
+/**
+ * The SubscriberList is a representation of a list of SharedSecretMappings
+ * grouped by NewsletterRecord id.
+ * @see SharedSecretMapping
+ * @see NewsletterRecord
+ */
 export interface SubscriberList {
   [key: string]: SharedSecretMapping[];
 }
 
+/**
+ * The SubscriptionState is a representation of the Subscription feature slice.
+ * @see SharedSecretMapping
+ * @see SubscriberList
+ * @see SubscriptionRecord
+ * @see NewsletterRecord
+ * @see SharedSecret
+ */
 export type SubscriptionState = {
   list: { [key: string]: SharedSecretMapping };
   newsletter_list: SubscriberList;
@@ -45,8 +73,17 @@ export type SubscriptionState = {
   error: string | undefined;
 };
 
+/**
+ * The initial state for the Subscription feature slice.
+ */
 const initialState: SubscriptionState = { list: {}, newsletter_list: {}, status: 'uninitialized', error: undefined };
 
+/**
+ * The processSubscriptionData function is used to process SubscriptionRecords
+ * and convert the Aleo Record structure into TS Types.
+ * @param record - The SubscriptionRecord to process.
+ * @returns The processed SubscriptionRecord data.
+ */
 export const processSubscriptionData = (record: SubscriptionRecord) => {
   const data = {
     ...record.data,
@@ -58,12 +95,26 @@ export const processSubscriptionData = (record: SubscriptionRecord) => {
   return { ...record, data: data };
 };
 
+/**
+ * The isSubscriptionRecord function is used to determine if a Record is a SubscriptionRecord.
+ * @param record - The Record to check.
+ * @returns True if the Record is a SubscriptionRecord, false otherwise.
+ * @see SubscriptionRecord
+ * @see Record
+ */
 export const isSubscriptionRecord = (
   record: NewsletterRecord | SubscriptionRecord | Record,
 ): record is SubscriptionRecord => {
   return (record as SubscriptionRecord).data.member_secret_idx !== undefined;
 };
 
+/**
+ * The lookupSubscriptionRecords function is used to lookup SubscriptionRecords
+ * and convert the Aleo Record structure into TS Types.
+ * @param records - The Records to lookup.
+ * @returns The processed SubscriptionRecords data.
+ * @see SubscriptionRecord
+ */
 export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupRecords', async (records: Record[]) => {
   const newsletter_records = records.filter(
     (record) => isNewsletterRecord(record) && !record.spent,
@@ -113,6 +164,17 @@ export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupR
   return shared_public_keys;
 });
 
+/**
+ * The fetchSubscriptionMappings function is used to fetch SubscriptionMappings
+ * paths from IPFS. and convert the Aleo Mapping structure into TS Types.
+ * @param mappings - The Mappings containing keys and information to derive a
+ * decrypted newsletter.
+ * @returns The processed SubscriptionMappings data.
+ * @see SharedSecretMapping
+ * @see SharedSecret
+ * @see NewsletterRecord
+ * @see SubscriptionRecord
+ */
 export const fetchSubscriptionMappings = createAsyncThunk(
   'subscriptions/fetchMappings',
   async (mappings: SharedSecretMapping[]) => {
@@ -157,6 +219,9 @@ export const fetchSubscriptionMappings = createAsyncThunk(
   },
 );
 
+/**
+ * The subscriptionsSlice manages the data and loading states related to user subscriptions.
+ */
 const subscriptionsSlice = createSlice({
   name: 'subscriptions',
   initialState,
@@ -192,17 +257,38 @@ const subscriptionsSlice = createSlice({
   },
 });
 
+/**
+ * Selector to acquire the SubscriptionRecords from the state.
+ * @param state
+ * @returns
+ */
 const selectSubscriptionsList = (state: { subscriptions: SubscriptionState }) => state.subscriptions.list;
 
+/**
+ * Selector to determine whether the SubscriptionsSlice is causing the application to load.
+ * @param state
+ * @returns boolean
+ */
 export const selectIsLoading = (state: { subscriptions: SubscriptionState }) =>
   state.subscriptions.status === 'loading';
 
+/**
+ * Selector to acquire the unspent SubscriptionRecords from the state.
+ * @param selectSubscriptionsList
+ * @returns NewsletterRecord[]
+ */
 export const selectUnspentSubscriptions = createSelector(selectSubscriptionsList, (subscription_list) => {
   return Object.values(subscription_list).filter((record) => !record.newsletter.spent);
 });
 
+/**
+ * Selector to acquire the spent SubscriptionRecords from the state.
+ * @param state
+ * @returns SharedSecretMapping[]
+ */
 export const selectNewsletterSubscribers = (state: { subscriptions: SubscriptionState }) => {
   return state.subscriptions.newsletter_list;
 };
 
+/** Export the reducer to be combined at the store level. */
 export default subscriptionsSlice.reducer;

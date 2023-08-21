@@ -1,14 +1,21 @@
-/* Style the nav horizontally across the screen with menu styles */
+/* Root styles for the navigation bar */
 nav > ul {
+  /* Layout properties for horizontally displaying nav items */
   display: flex;
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
+
+  /* Reset default list styles */
   list-style: none;
   margin: 0;
   padding: 0;
+
+  /* Background and text styling */
   background-color: #333;
   color: #fff;
+
+  /* Font and text styling */
   font-family: sans-serif;
   font-size: 1.2rem;
   font-weight: 300;
@@ -16,35 +23,37 @@ nav > ul {
   text-transform: uppercase;
 }
 
-/* Style the text to look like Bold Italic Black and White Signs in the style of They Live */
+/* Styles for individual navigation items, inspired by "They Live" movie signage */
 nav > ul > li {
+  /* Layout properties for nav items */
   position: relative;
   padding: 1rem;
   cursor: pointer;
   transition: color 0.25s;
-  /* Color background white (like a billboard with Large black text) */
+
+  /* Background and text color, contrasting for "billboard" effect */
   background-color: #fff;
   color: #000;
-  /* font family */
+
+  /* Font styling for bold, italic, large text */
   font-family: sans-serif;
   font-style: italic;
-  /* font weight */
   font-weight: 900;
-  /* font size 48px in rem */
   font-size: 3rem;
-  /* letter spacing */
   letter-spacing: 0.1rem;
-  /* text transform */
   text-transform: uppercase;
-  /* border radius */
+
+  /* Rounded corners for nav items */
   border-radius: 0.1rem;
 }
 
+/* Text styles for navigation links */
 nav > ul > li > a {
   color: #000;
   font-weight: 900;
 }
 
+/* Hover effect for navigation links */
 nav > ul > li > a:hover {
-  color: #000;
+  color: #000; /* This keeps the color consistent, but could be changed for a hover effect */
 }
