@@ -4,13 +4,31 @@ The app is a react-redux message board with built in NaCL encryption using symme
 
 ## Video Demos
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/zg1bBf0phEk" frameborder="0" allowfullscreen></iframe>
+
+Initial Clips:
+
 - [Demo Part 1](videos/Demo%20Part%201.webm)
 - [Demo Part 2](videos/Demo%20Part%202.webm)
 - [Demo Part 3](videos/Demo%20Part%203.webm)
 
+# Newsletter Frontend
+
+A frontend to handle asymmetric and symmetric key management between disparate parties. Users can create groups with the `newsletter_v0_1_0.aleo` contract and invite members to deliver issues (new content). Newsletters contain contents and template structure which is a loose representation of content. Privacy mode can be toggled on or off to show the cipher text of any given input.
+
+## Project Frameworks
+
+- Vite
+- React
+- Redux Toolkit
+- @DemoxLabs Aleo Wallet Adapter
+- Vitest
+- Vite Plugin WASM Pack (leveraging snarkvm-wasm)
+- Aleo
+
 ## Build and Run
 
-`npm run` will list all commands from package.json. A simple `npm install` followed by `npm run dev` will get you started running the frontend.
+`npm run` will list all commands from package.json. A simple `npm install` followed by `npm run wasm` and `npm run dev` will get you started running the frontend.
 
 ## How to use the Application
 
