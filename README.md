@@ -4,7 +4,7 @@ The app is a react-redux message board with built in NaCL encryption using symme
 
 ## Video Demos
 
-[![CipherPage Full Demo](https://img.youtube.com/vi/zg1bBf0phEk/maxresdefault.jpg)](https://www.youtube.com/watch?v=zg1bBf0phEk)
+[![CipherPage Full Demo](videos/mqdefault.jpeg)](https://www.youtube.com/watch?v=zg1bBf0phEk)
 
 Initial Clips:
 
