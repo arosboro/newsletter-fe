@@ -60,6 +60,10 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+  nav > ul {
+    background-color: #f9f9f9;
+    color: #000000;
+  }
   a:hover {
     color: #747bff;
   }
