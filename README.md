@@ -30,6 +30,46 @@ A frontend to handle asymmetric and symmetric key management between disparate p
 
 `npm run` will list all commands from package.json. A simple `npm install` followed by `npm run wasm` and `npm run dev` will get you started running the frontend.
 
+## Environment Variables
+
+Here are the steps to set up the .env file and .env.local file:
+
+1. Open the .env file.
+2. Replace the placeholders with the correct values for your environment.
+3. Save the changes.
+
+Now, let's set up the .env.local file:
+
+1. Copy the example from .env.local.example.
+2. Create a new file named .env.local.
+3. Paste the copied content into the .env.local file.
+4. Modify the values as necessary.
+5. Save the changes.
+
+Note: The .env.local file is used for local development and is not checked into the repository.
+
+For storing ciphertext of the offchain, set the following keys:
+
+- VITE_INFURA_IPFS_API_KEY
+- VITE_INFURA_IPFS_API_SECRET
+
+The application uses Infura's IPFS gateway. You can get these keys/secrets by creating a free trial account on https://infura.io.
+
+If you are using Vercel or another hosting platform, you will need to configure the environment variables as defined by these files. These files are currently ignored in git.
+
+Remember, always tailor .env and .env.local to your specific needs.
+
+# Checkout Newsletter Contract
+
+Use git submodule update --init --recursive to checkout the newsletter contract.
+
+# Run Tests
+
+`cd ./aleo/newsletter && export PRIVATE_KEY="APrivateKey1zkp5YhYmi67oU8EWKvwkWF82RnVqqbNFRbicraJufz5XJM6"; make test`
+
+I used examples with the private key from the program.example.json, so it may work for you to run all of the transitions rapid fire with the make file if you export that key as export PRIVATE_KEY ... and then run make test.
+Otherwise you will have to modify the makefile.
+
 ## How to use the Application
 
 There are 3 routes which can direct interaction with the Application:

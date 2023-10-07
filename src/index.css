@@ -70,4 +70,7 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+  .App input {
+    color: #000000;
+  }
 }
