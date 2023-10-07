@@ -61,7 +61,7 @@ Remember, always tailor .env and .env.local to your specific needs.
 
 # Checkout Newsletter Contract
 
-Use git submodule update --init --recursive to checkout the newsletter contract.
+Use `git submodule update --init --recursive` to checkout the newsletter contract.
 
 # Run Tests
 
