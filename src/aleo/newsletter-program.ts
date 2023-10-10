@@ -75,23 +75,23 @@ record Subscription:
 
 
 mapping newsletter_member_sequence:
-	key left as field.public;
-	value right as field.public;
+	key as field.public;
+	value as field.public;
 
 
 mapping member_secrets:
-	key left as field.public;
-	value right as SharedSecret.public;
+	key as field.public;
+	value as SharedSecret.public;
 
 
 mapping newsletter_issue_sequence:
-	key left as field.public;
-	value right as field.public;
+	key as field.public;
+	value as field.public;
 
 
 mapping newsletter_issues:
-	key left as field.public;
-	value right as SharedIssue.public;
+	key as field.public;
+	value as SharedIssue.public;
 
 closure cantors_pairing:
     input r0 as field;
@@ -134,11 +134,11 @@ function main:
     call is_empty_bytes64 r9 into r12;
     not r12 into r13;
     assert.eq r13 true;
-    hash.bhp256 r6 into r14 as field;    call cantors_pairing r14 1field into r15;
+    hash.bhp256 r6 into r14 as field;
+    call cantors_pairing r14 1field into r15;
     cast self.caller self.caller r14 1field true false r0 r1 r2 r3 r4 r5 r6 r7 into r16 as Newsletter.record;
-    output r16 as Newsletter.record;
-
-    finalize r14 1field r15 r8 r9;
+    async main r14 1field r15 r8 r9 into r17;    output r16 as Newsletter.record;
+    output r17 as newsletter_v0_1_0.aleo/main.future;
 
 finalize main:
     input r0 as field.public;
@@ -176,10 +176,9 @@ function invite:
     not r0.base into r9;
     not r0.revision into r10;
     cast r1 r0.op r0.id r6 r9 r10 r0.title r0.title_nonce r0.template r0.template_nonce r0.content r0.content_nonce r0.group_symmetric_key r7 into r11 as Newsletter.record;
-    output r8 as Newsletter.record;
+    async invite r0.id r6 into r12;    output r8 as Newsletter.record;
     output r11 as Newsletter.record;
-
-    finalize r0.id r6;
+    output r12 as newsletter_v0_1_0.aleo/invite.future;
 
 finalize invite:
     input r0 as field.public;
@@ -213,11 +212,10 @@ function accept:
     cast self.caller r0.op r0.id r0.member_sequence r0.base r0.revision r0.title r0.title_nonce r0.template r0.template_nonce r0.content r0.content_nonce r0.group_symmetric_key r1 into r13 as Newsletter.record;
     cast self.caller r0.op r0.id r0.member_sequence r12 into r14 as Subscription.record;
     cast r0.op r0.op r0.id r0.member_sequence r12 into r15 as Subscription.record;
-    output r13 as Newsletter.record;
+    async accept r12 r2 r3 into r16;    output r13 as Newsletter.record;
     output r14 as Subscription.record;
     output r15 as Subscription.record;
-
-    finalize r12 r2 r3;
+    output r16 as newsletter_v0_1_0.aleo/accept.future;
 
 finalize accept:
     input r0 as field.public;
@@ -247,9 +245,8 @@ function deliver:
     not r10 into r11;
     assert.eq r11 true;
     cast self.caller r0.op r0.id r0.member_sequence r0.base r0.revision r1 r2 r0.template r0.template_nonce r3 r4 r0.group_symmetric_key r0.individual_private_key into r12 as Newsletter.record;
-    output r12 as Newsletter.record;
-
-    finalize r0.id r5 r6;
+    async deliver r0.id r5 r6 into r13;    output r12 as Newsletter.record;
+    output r13 as newsletter_v0_1_0.aleo/deliver.future;
 
 finalize deliver:
     input r0 as field.public;
@@ -296,9 +293,8 @@ function unsub:
     or r1 r2 into r3;
     assert.eq r3 true;
     is.eq r0.owner self.caller into r4;
-    output r4 as boolean.private;
-
-    finalize r0.member_secret_idx;
+    async unsub r0.member_secret_idx into r5;    output r4 as boolean.private;
+    output r5 as newsletter_v0_1_0.aleo/unsub.future;
 
 finalize unsub:
     input r0 as field.public;
