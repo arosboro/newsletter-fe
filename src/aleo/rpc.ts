@@ -66,7 +66,12 @@ export async function getMapping(
   mappingKey: string,
 ): Promise<any> {
   const mappingUrl = `${apiUrl}/testnet3/program/${programId}/mapping`;
-  const response = await axios.get(`${mappingUrl}/${mappingName}/${mappingKey}`);
+  // Add Access-Control-Allow-Origin header to allow CORS
+  const response = await axios.get(`${mappingUrl}/${mappingName}/${mappingKey}`, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
   if (!response.data) {
     console.log('Mapping not found');
   } else {

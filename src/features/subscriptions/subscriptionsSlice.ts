@@ -134,7 +134,7 @@ export const lookupSubscriptionRecords = createAsyncThunk('subscriptions/lookupR
         const current_member_sequence = BigInt(j).toString();
         const member_secret_idx = cantors_pairing(`${newsletter_id}field`, `${current_member_sequence}field`);
         const member_secret_json: string = await getMapping(
-          'https://vm.aleo.org/api',
+          'https://api.explorer.aleo.org/v1',
           NewsletterProgramId,
           'member_secrets',
           member_secret_idx,
