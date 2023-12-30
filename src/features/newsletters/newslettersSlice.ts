@@ -309,7 +309,7 @@ export const fetchIssues = async (record: NewsletterRecord): Promise<SharedIssue
   const newsletter_id = record.data.id;
   const newsletter_id_field = `${newsletter_id}field`;
   const issue_sequence_field = await getMapping(
-    'https://vm.aleo.org/api',
+    'https://api.explorer.aleo.org/v1',
     NewsletterProgramId,
     'newsletter_issue_sequence',
     newsletter_id_field,
@@ -325,7 +325,7 @@ export const fetchIssues = async (record: NewsletterRecord): Promise<SharedIssue
       const current_issue_sequence = BigInt(j).toString();
       const issue_idx: string = cantors_pairing(`${newsletter_id_field}`, `${current_issue_sequence}field`);
       const issue_json = await getMapping(
-        'https://vm.aleo.org/api',
+        'https://api.explorer.aleo.org/v1',
         NewsletterProgramId,
         'newsletter_issues',
         issue_idx,
