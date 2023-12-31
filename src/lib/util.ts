@@ -435,18 +435,10 @@ export const decryptMessage = (
  * @returns string - The content.
  */
 export const resolve = async (path: string) => {
-  // Cross origin wildcard header must be set on IPFS node
-  const resolve = async (path) => {
-    try {
-      const uri = `https://cipher-page.infura-ipfs.io/${path}`;
-      const response = await axios.get(uri);
-      return response.data;
-    } catch (error) {
-      console.error('An error occurred:', error);
-      return null;
-    }
-  }
-  return await resolve(path);
+  const cipher_text = await axios.get(`https://cipher-page.infura-ipfs.io/${path}`).then((response) => {
+    return response.data;
+  });
+  return cipher_text;
 };
 
 /**
