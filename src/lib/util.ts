@@ -435,7 +435,7 @@ export const decryptMessage = (
  * @returns string - The content.
  */
 export const resolve = async (path: string) => {
-  const cipher_text = await axios.get(`https://ipfs.io/ipfs/${path}`).then((response) => {
+  const cipher_text = await axios.get(`https://cipher-page.infura-ipfs.io/ipfs/${path}`).then((response) => {
     return response.data;
   });
   return cipher_text;
